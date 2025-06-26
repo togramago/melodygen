@@ -35,10 +35,11 @@
     }
     
     .controls {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        display: flex;
+        flex-wrap: wrap;
         gap: 20px;
         margin-bottom: 30px;
+        justify-content: space-around;
     }
     
     .control-group {
@@ -46,6 +47,8 @@
         padding: 20px;
         border-radius: 10px;
         border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 200px;
+        flex: 1;
     }
     
     label {
@@ -66,17 +69,20 @@
     }
     
     .melody-grid {
-        display: grid;
-        grid-template-columns: repeat(16, 1fr);
+        display: flex;
+        flex-wrap: wrap;
         gap: 4px;
         margin: 20px 0;
         background: rgba(0, 0, 0, 0.2);
         padding: 20px;
         border-radius: 10px;
+        width: 100%;
+        box-sizing: border-box;
     }
     
     .note-cell {
-        aspect-ratio: 1;
+        width: calc(6.25% - 4px);
+        height: 40px;
         background: rgba(255, 255, 255, 0.8);
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 5px;
@@ -85,9 +91,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.8em;
+        font-size: 0.7em;
         color: #333;
         font-weight: bold;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
     }
     
     .note-cell:hover {
@@ -172,10 +180,10 @@
     }
     
     .bar-labels {
-        display: grid;
-        grid-template-columns: repeat(16, 1fr);
-        gap: 4px;
+        display: flex;
+        justify-content: space-between;
         margin-bottom: 10px;
+        padding: 0 20px;
     }
     
     .bar-label {
@@ -185,7 +193,30 @@
         padding: 5px 0;
     }
     
-    .notes-info {
+    /* Safari-specific fixes */
+    @supports (-webkit-appearance: none) {
+        .note-cell {
+            width: calc(6.25% - 3px);
+            min-height: 40px;
+        }
+        
+        .melody-grid {
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+    
+    /* Mobile Safari fixes */
+    @media screen and (max-width: 768px) {
+        .note-cell {
+            width: calc(6.25% - 2px);
+            height: 35px;
+            font-size: 0.6em;
+        }
+        
+        .container {
+            padding: 15px;
+        }
+    }
         margin-top: 20px;
         background: rgba(0, 0, 0, 0.2);
         padding: 15px;
@@ -231,10 +262,10 @@
     </div>
     
     <div class="bar-labels">
-        <div class="bar-label">Bar 1</div><div></div><div></div><div></div>
-        <div class="bar-label">Bar 2</div><div></div><div></div><div></div>
-        <div class="bar-label">Bar 3</div><div></div><div></div><div></div>
-        <div class="bar-label">Bar 4</div><div></div><div></div><div></div>
+        <div class="bar-label">Bar 1</div>
+        <div class="bar-label">Bar 2</div>
+        <div class="bar-label">Bar 3</div>
+        <div class="bar-label">Bar 4</div>
     </div>
     
     <div class="melody-grid" id="melodyGrid"></div>
