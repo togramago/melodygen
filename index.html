@@ -240,6 +240,7 @@
     <div class="melody-grid" id="melodyGrid"></div>
     
     <div class="buttons">
+        <button class="btn-primary" onclick="startAudio()">🔊 Enable Audio</button>
         <button class="btn-primary" onclick="playMelody()">▶ Play Melody</button>
         <button class="btn-secondary" onclick="stopMelody()">⏹ Stop</button>
         <button class="btn-success" onclick="generateRandom()">🎲 Random Melody</button>
@@ -249,6 +250,7 @@
     
     <div class="notes-info">
         <strong>How to use:</strong><br>
+        • <strong>FIRST:</strong> Click "Enable Audio" to start sound (required by browsers)<br>
         • Click on the grid cells to place notes - each column represents a 16th note<br>
         • Higher rows = higher pitch, lower rows = lower pitch<br>
         • Use the controls to change scale, tempo, and instrument<br>
@@ -272,8 +274,11 @@
     };
     
     async function initAudio() {
-        if (!synth) {
+        if (Tone.context.state !== 'running') {
             await Tone.start();
+            console.log('Audio context started');
+        }
+        if (!synth) {
             updateInstrument();
         }
     }
@@ -341,12 +346,28 @@
             
             // Play note preview
             initAudio().then(() => {
-                synth.triggerAttackRelease(scale[11 - row], '8n');
+                if (Tone.context.state === 'running') {
+                    synth.triggerAttackRelease(scale[11 - row], '8n');
+                }
+            }).catch(err => {
+                console.log('Audio not ready:', err);
             });
         }
     }
     
-    async function playMelody() {
+    async function startAudio() {
+        try {
+            await Tone.start();
+            if (!synth) {
+                updateInstrument();
+            }
+            document.querySelector('button[onclick="startAudio()"]').style.display = 'none';
+            alert('Audio enabled! You can now play melodies and hear note previews.');
+        } catch (error) {
+            console.error('Failed to start audio:', error);
+            alert('Failed to enable audio. Please try again.');
+        }
+    }
         if (isPlaying) return;
         
         await initAudio();
@@ -371,7 +392,9 @@
             if (melody[currentStep] !== null) {
                 const scale = scales[document.getElementById('scale').value];
                 const note = scale[11 - melody[currentStep]];
-                synth.triggerAttackRelease(note, '8n');
+                if (Tone.context.state === 'running') {
+                    synth.triggerAttackRelease(note, '8n');
+                }
             }
             
             currentStep = (currentStep + 1) % 16;
