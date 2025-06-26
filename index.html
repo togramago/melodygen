@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-Bar Melody Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+```
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .control-group {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    
+    select, input {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        font-size: 1em;
+    }
+    
+    .melody-grid {
+        display: grid;
+        grid-template-columns: repeat(16, 1fr);
+        gap: 4px;
+        margin: 20px 0;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        border-radius: 10px;
+    }
+    
+    .note-cell {
+        aspect-ratio: 1;
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8em;
+        color: #333;
+        font-weight: bold;
+    }
+    
+    .note-cell:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: scale(1.05);
+    }
+    
+    .note-cell.active {
+        background: #ff6b6b;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+    
+    .note-cell.playing {
+        background: #4ecdc4;
+        animation: pulse 0.3s ease;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 30px 0;
+        flex-wrap: wrap;
+    }
+    
+    button {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        color: white;
+    }
+    
+    .btn-success {
+        background: linear-gradient(45deg, #26de81, #20bf6b);
+        color: white;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(45deg, #fed330, #f7b731);
+        color: #333;
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .tempo-display {
+        text-align: center;
+        font-size: 1.2em;
+        margin: 10px 0;
+        color: #fff;
+    }
+    
+    .bar-labels {
+        display: grid;
+        grid-template-columns: repeat(16, 1fr);
+        gap: 4px;
+        margin-bottom: 10px;
+    }
+    
+    .bar-label {
+        text-align: center;
+        font-size: 0.9em;
+        color: rgba(255, 255, 255, 0.8);
+        padding: 5px 0;
+    }
+    
+    .notes-info {
+        margin-top: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 0.9em;
+        line-height: 1.6;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 4-Bar Melody Generator</h1>
+
+```
+    <div class="controls">
+        <div class="control-group">
+            <label for="scale">Scale:</label>
+            <select id="scale">
+                <option value="major">C Major</option>
+                <option value="minor">C Minor</option>
+                <option value="dorian">C Dorian</option>
+                <option value="pentatonic">C Pentatonic</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="tempo">Tempo (BPM):</label>
+            <input type="range" id="tempo" min="60" max="180" value="120">
+            <div class="tempo-display">120 BPM</div>
+        </div>
+        
+        <div class="control-group">
+            <label for="instrument">Instrument:</label>
+            <select id="instrument">
+                <option value="synth">Synthesizer</option>
+                <option value="piano">Piano</option>
+                <option value="guitar">Guitar</option>
+                <option value="organ">Organ</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="bar-labels">
+        <div class="bar-label">Bar 1</div><div></div><div></div><div></div>
+        <div class="bar-label">Bar 2</div><div></div><div></div><div></div>
+        <div class="bar-label">Bar 3</div><div></div><div></div><div></div>
+        <div class="bar-label">Bar 4</div><div></div><div></div><div></div>
+    </div>
+    
+    <div class="melody-grid" id="melodyGrid"></div>
+    
+    <div class="buttons">
+        <button class="btn-primary" onclick="playMelody()">▶ Play Melody</button>
+        <button class="btn-secondary" onclick="stopMelody()">⏹ Stop</button>
+        <button class="btn-success" onclick="generateRandom()">🎲 Random Melody</button>
+        <button class="btn-warning" onclick="clearMelody()">🗑 Clear</button>
+        <button class="btn-primary" onclick="exportMelody()">💾 Export MIDI</button>
+    </div>
+    
+    <div class="notes-info">
+        <strong>How to use:</strong><br>
+        • Click on the grid cells to place notes - each column represents a 16th note<br>
+        • Higher rows = higher pitch, lower rows = lower pitch<br>
+        • Use the controls to change scale, tempo, and instrument<br>
+        • Click "Random Melody" to generate inspiration<br>
+        • The melody will loop continuously when played
+    </div>
+</div>
+
+<script>
+    let synth;
+    let isPlaying = false;
+    let currentStep = 0;
+    let playInterval;
+    let melody = Array(16).fill(null); // 16 steps for 4 bars
+    
+    const scales = {
+        major: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5'],
+        minor: ['C4', 'D4', 'Eb4', 'F4', 'G4', 'Ab4', 'Bb4', 'C5', 'D5', 'Eb5', 'F5', 'G5'],
+        dorian: ['C4', 'D4', 'Eb4', 'F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'Eb5', 'F5', 'G5'],
+        pentatonic: ['C4', 'D4', 'F4', 'G4', 'A4', 'C5', 'D5', 'F5', 'G5', 'A5', 'C6', 'D6']
+    };
+    
+    async function initAudio() {
+        if (!synth) {
+            await Tone.start();
+            updateInstrument();
+        }
+    }
+    
+    function updateInstrument() {
+        if (synth) {
+            synth.dispose();
+        }
+        
+        const instrument = document.getElementById('instrument').value;
+        switch(instrument) {
+            case 'piano':
+                synth = new Tone.Sampler().toDestination();
+                break;
+            case 'guitar':
+                synth = new Tone.PluckSynth().toDestination();
+                break;
+            case 'organ':
+                synth = new Tone.FMSynth().toDestination();
+                break;
+            default:
+                synth = new Tone.Synth().toDestination();
+        }
+    }
+    
+    function createGrid() {
+        const grid = document.getElementById('melodyGrid');
+        const scale = scales[document.getElementById('scale').value];
+        
+        grid.innerHTML = '';
+        
+        // Create grid with 12 rows (notes) and 16 columns (steps)
+        for (let row = 0; row < 12; row++) {
+            for (let col = 0; col < 16; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'note-cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cell.textContent = scale[11 - row].replace('4', '').replace('5', '').replace('6', '');
+                
+                cell.onclick = () => toggleNote(row, col);
+                grid.appendChild(cell);
+            }
+        }
+    }
+    
+    function toggleNote(row, col) {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        const scale = scales[document.getElementById('scale').value];
+        
+        if (melody[col] === row) {
+            // Remove note
+            melody[col] = null;
+            cell.classList.remove('active');
+        } else {
+            // Clear previous note in this column
+            const prevCell = document.querySelector(`[data-col="${col}"].active`);
+            if (prevCell) {
+                prevCell.classList.remove('active');
+            }
+            
+            // Add new note
+            melody[col] = row;
+            cell.classList.add('active');
+            
+            // Play note preview
+            initAudio().then(() => {
+                synth.triggerAttackRelease(scale[11 - row], '8n');
+            });
+        }
+    }
+    
+    async function playMelody() {
+        if (isPlaying) return;
+        
+        await initAudio();
+        
+        isPlaying = true;
+        currentStep = 0;
+        
+        const tempo = parseInt(document.getElementById('tempo').value);
+        const stepDuration = (60 / tempo / 4) * 1000; // 16th notes
+        
+        playInterval = setInterval(() => {
+            // Clear previous highlight
+            document.querySelectorAll('.note-cell.playing').forEach(cell => {
+                cell.classList.remove('playing');
+            });
+            
+            // Highlight current step
+            const currentCells = document.querySelectorAll(`[data-col="${currentStep}"]`);
+            currentCells.forEach(cell => cell.classList.add('playing'));
+            
+            // Play note if exists
+            if (melody[currentStep] !== null) {
+                const scale = scales[document.getElementById('scale').value];
+                const note = scale[11 - melody[currentStep]];
+                synth.triggerAttackRelease(note, '8n');
+            }
+            
+            currentStep = (currentStep + 1) % 16;
+        }, stepDuration);
+    }
+    
+    function stopMelody() {
+        isPlaying = false;
+        if (playInterval) {
+            clearInterval(playInterval);
+        }
+        
+        // Clear highlights
+        document.querySelectorAll('.note-cell.playing').forEach(cell => {
+            cell.classList.remove('playing');
+        });
+    }
+    
+    function generateRandom() {
+        const scale = scales[document.getElementById('scale').value];
+        melody = Array(16).fill(null);
+        
+        // Generate a musical pattern
+        for (let i = 0; i < 16; i++) {
+            // Create some rhythm - not every step has a note
+            if (Math.random() > 0.3) {
+                // Favor middle range notes
+                const noteIndex = Math.floor(Math.random() * 8) + 2;
+                melody[i] = noteIndex;
+            }
+        }
+        
+        updateGridDisplay();
+    }
+    
+    function clearMelody() {
+        melody = Array(16).fill(null);
+        updateGridDisplay();
+    }
+    
+    function updateGridDisplay() {
+        document.querySelectorAll('.note-cell').forEach(cell => {
+            cell.classList.remove('active');
+        });
+        
+        melody.forEach((note, col) => {
+            if (note !== null) {
+                const cell = document.querySelector(`[data-row="${note}"][data-col="${col}"]`);
+                if (cell) {
+                    cell.classList.add('active');
+                }
+            }
+        });
+    }
+    
+    function exportMelody() {
+        const scale = scales[document.getElementById('scale').value];
+        const tempo = document.getElementById('tempo').value;
+        
+        let midiData = `Tempo: ${tempo} BPM\n`;
+        midiData += `Scale: ${document.getElementById('scale').value}\n`;
+        midiData += `Notes: `;
+        
+        melody.forEach((note, i) => {
+            if (note !== null) {
+                midiData += `${scale[11 - note]}@${i + 1} `;
+            }
+        });
+        
+        const blob = new Blob([midiData], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'melody.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    // Event listeners
+    document.getElementById('scale').onchange = createGrid;
+    document.getElementById('instrument').onchange = updateInstrument;
+    document.getElementById('tempo').oninput = function() {
+        document.querySelector('.tempo-display').textContent = this.value + ' BPM';
+    };
+    
+    // Initialize
+    createGrid();
+</script>
+```
+
+</body>
+</html>
