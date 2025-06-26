@@ -467,42 +467,11 @@
 
             <!-- Key Selection -->
             <div class="control-group">
-                <label for="key">Key</label>
-                <select id="key">
-                    <option value="C">C Major</option>
-                    <option value="G">G Major</option>
-                    <option value="D">D Major</option>
-                    <option value="A">A Major</option>
-                    <option value="E">E Major</option>
-                    <option value="B">B Major</option>
-                    <option value="F#">F# Major</option>
-                    <option value="C#">C# Major</option>
-                    <option value="F">F Major</option>
-                    <option value="Bb">Bb Major</option>
-                    <option value="Eb">Eb Major</option>
-                    <option value="Ab">Ab Major</option>
-                    <option value="Db">Db Major</option>
-                    <option value="Gb">Gb Major</option>
-                    <option value="Am">A Minor</option>
-                    <option value="Em">E Minor</option>
-                    <option value="Bm">B Minor</option>
-                    <option value="F#m">F# Minor</option>
-                    <option value="C#m">C# Minor</option>
-                    <option value="G#m">G# Minor</option>
-                    <option value="D#m">D# Minor</option>
-                    <option value="A#m">A# Minor</option>
-                    <option value="Dm">D Minor</option>
-                    <option value="Gm">G Minor</option>
-                    <option value="Cm">C Minor</option>
-                    <option value="Fm">F Minor</option>
-                    <option value="Bbm">Bb Minor</option>
-                    <option value="Ebm">Eb Minor</option>
-                    <option value="C_pent">C Pentatonic</option>
-                    <option value="G_pent">G Pentatonic</option>
-                    <option value="D_pent">D Pentatonic</option>
-                    <option value="A_pent">A Pentatonic</option>
-                    <option value="E_pent">E Pentatonic</option>
-                </select>
+                <label for="key">Tempo</label>
+                <div class="slider-container">
+                    <input type="range" id="tempo" class="slider" min="60" max="180" value="90">
+                    <div class="slider-value" id="tempoValue">90</div>
+                </div>
             </div>
 
             <!-- Shortest Note -->
@@ -526,13 +495,6 @@
                 </div>
             </div>
 
-            <!-- Preview Button -->
-            <div class="control-group">
-                <label>Preview</label>
-                <div class="preview-button" id="previewButton">
-                    👁️
-                </div>
-            </div>
         </div>
 
         <button class="generate-button" id="generateButton">
@@ -563,8 +525,8 @@
             <div class="speed-buttons">
                 <div class="speed-button" data-speed="0.25">0.25x</div>
                 <div class="speed-button" data-speed="0.5">0.5x</div>
-                <div class="speed-button active" data-speed="0.75">0.75x</div>
-                <div class="speed-button" data-speed="1">1x</div>
+                <div class="speed-button" data-speed="0.75">0.75x</div>
+                <div class="speed-button active" data-speed="1">1x</div>
             </div>
             <button class="replay-button" id="replayButton">
                 ▶️ Replay Melody
@@ -576,7 +538,7 @@
 <script>
     // Global state
     let generatedMelody = null;
-    let currentSpeed = 0.75;
+    let currentSpeed = 1;
     let revealedBars = new Set();
 
     // Initialize the app
