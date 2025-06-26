@@ -4,225 +4,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4-Bar Melody Generator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <title>🎵 Melody Generator</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
+        * {
             margin: 0;
-            min-height: 100vh;
+            padding: 0;
+            box-sizing: border-box;
         }
 
 ```
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #333;
+        padding: 20px;
+        min-height: 100vh;
+    }
+    
     .container {
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
-        background: rgba(255, 255, 255, 0.1);
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
         padding: 30px;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-    
-    h1 {
         text-align: center;
-        margin-bottom: 30px;
-        font-size: 2.5em;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
     
-    .controls {
+    .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .content {
+        padding: 40px;
+    }
+    
+    /* Control Panel Styling */
+    .control-panel {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .control-panel h2 {
+        color: #495057;
+        margin-bottom: 25px;
+        font-size: 1.4em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .controls-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
+        gap: 25px;
         margin-bottom: 30px;
-        justify-content: space-around;
     }
     
     .control-group {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        min-width: 200px;
         flex: 1;
+        min-width: 200px;
     }
     
-    label {
+    .control-group label {
         display: block;
-        margin-bottom: 8px;
         font-weight: bold;
-        font-size: 1.1em;
+        margin-bottom: 8px;
+        color: #495057;
     }
     
-    select, input {
+    .control-group select,
+    .control-group input[type="range"] {
         width: 100%;
         padding: 10px;
-        border: none;
-        border-radius: 5px;
-        background: rgba(255, 255, 255, 0.9);
-        color: #333;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
         font-size: 1em;
+        background: white;
     }
     
-    .melody-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin: 20px 0;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 20px;
-        border-radius: 10px;
-        width: 100%;
-        box-sizing: border-box;
+    .control-group select:focus,
+    .control-group input:focus {
+        outline: none;
+        border-color: #4facfe;
+        box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
     }
     
-    .note-cell {
-        width: calc(6.25% - 4px);
-        height: 40px;
-        background: rgba(255, 255, 255, 0.8);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.2s ease;
+    .toggle-group {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 0.7em;
-        color: #333;
-        font-weight: bold;
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    .note-cell:hover {
-        background: rgba(255, 255, 255, 0.9);
-        transform: scale(1.05);
-    }
-    
-    .note-cell.active {
-        background: #ff6b6b;
-        color: white;
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-    }
-    
-    .note-cell.playing {
-        background: #4ecdc4;
-        animation: pulse 0.3s ease;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-    
-    .buttons {
-        display: flex;
         gap: 15px;
-        justify-content: center;
-        margin: 30px 0;
+    }
+    
+    .toggle {
+        position: relative;
+        width: 60px;
+        height: 30px;
+        background: #dee2e6;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    
+    .toggle.active {
+        background: #4facfe;
+    }
+    
+    .toggle::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .toggle.active::after {
+        transform: translateX(30px);
+    }
+    
+    .range-display {
+        text-align: center;
+        font-weight: bold;
+        color: #4facfe;
+        margin-top: 5px;
+    }
+    
+    .preview-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .preview-btn:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+    
+    /* Primary Action Button */
+    .generate-section {
+        text-align: center;
+        margin: 40px 0;
+    }
+    
+    .generate-btn {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        border: none;
+        padding: 20px 50px;
+        font-size: 1.3em;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .generate-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+    }
+    
+    /* Melody Display Section */
+    .melody-display {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 40px;
+        min-height: 300px;
+    }
+    
+    .melody-display h2 {
+        color: #495057;
+        margin-bottom: 25px;
+        font-size: 1.4em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .staff-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .staff {
+        position: relative;
+        height: 100px;
+        margin: 20px 0;
+    }
+    
+    .staff-lines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+    }
+    
+    .staff-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #333;
+    }
+    
+    .clef {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3em;
+        font-weight: bold;
+    }
+    
+    .notes-area {
+        margin-left: 80px;
+        height: 100%;
+        position: relative;
+    }
+    
+    /* Interactive Reveal Area */
+    .reveal-section {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 30px;
+    }
+    
+    .reveal-section h2 {
+        color: #495057;
+        margin-bottom: 25px;
+        font-size: 1.4em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .reveal-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .reveal-btn {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: all 0.3s ease;
+    }
+    
+    .reveal-btn:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+    
+    .reveal-btn.revealed {
+        background: #28a745;
+    }
+    
+    .reveal-btn:disabled {
+        background: #dee2e6;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+    
+    .playback-controls {
+        display: flex;
+        align-items: center;
+        gap: 20px;
         flex-wrap: wrap;
     }
     
-    button {
-        padding: 12px 25px;
-        border: none;
-        border-radius: 25px;
-        font-size: 1.1em;
+    .playback-controls label {
         font-weight: bold;
+        color: #495057;
+    }
+    
+    .speed-btn {
+        background: #17a2b8;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 6px;
         cursor: pointer;
+        font-size: 0.9em;
         transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
     
-    .btn-primary {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-        color: white;
+    .speed-btn:hover {
+        background: #138496;
     }
     
-    .btn-secondary {
-        background: linear-gradient(45deg, #4ecdc4, #44a08d);
-        color: white;
+    .speed-btn.active {
+        background: #007bff;
     }
     
-    .btn-success {
-        background: linear-gradient(45deg, #26de81, #20bf6b);
-        color: white;
-    }
-    
-    .btn-warning {
-        background: linear-gradient(45deg, #fed330, #f7b731);
-        color: #333;
-    }
-    
-    button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    }
-    
-    button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-    
-    .tempo-display {
+    .empty-state {
         text-align: center;
-        font-size: 1.2em;
-        margin: 10px 0;
-        color: #fff;
+        color: #6c757d;
+        font-style: italic;
+        padding: 40px 0;
     }
     
-    .bar-labels {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        padding: 0 20px;
-    }
-    
-    .bar-label {
-        text-align: center;
-        font-size: 0.9em;
-        color: rgba(255, 255, 255, 0.8);
-        padding: 5px 0;
-    }
-    
-    /* Safari-specific fixes */
-    @supports (-webkit-appearance: none) {
-        .note-cell {
-            width: calc(6.25% - 3px);
-            min-height: 40px;
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .controls-grid {
+            flex-direction: column;
         }
         
-        .melody-grid {
-            -webkit-overflow-scrolling: touch;
-        }
-    }
-    
-    /* Mobile Safari fixes */
-    @media screen and (max-width: 768px) {
-        .note-cell {
-            width: calc(6.25% - 2px);
-            height: 35px;
-            font-size: 0.6em;
+        .control-group {
+            min-width: auto;
         }
         
-        .container {
-            padding: 15px;
+        .reveal-controls {
+            justify-content: center;
         }
-    }
-        margin-top: 20px;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 15px;
-        border-radius: 10px;
-        font-size: 0.9em;
-        line-height: 1.6;
+        
+        .playback-controls {
+            justify-content: center;
+        }
     }
 </style>
 ```
@@ -230,289 +366,290 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎵 4-Bar Melody Generator</h1>
+        <!-- Header -->
+        <div class="header">
+            <h1>🎵 Melody Generator</h1>
+            <p>Create beautiful melodies with customizable parameters</p>
+        </div>
 
 ```
-    <div class="controls">
-        <div class="control-group">
-            <label for="scale">Scale:</label>
-            <select id="scale">
-                <option value="major">C Major</option>
-                <option value="minor">C Minor</option>
-                <option value="dorian">C Dorian</option>
-                <option value="pentatonic">C Pentatonic</option>
-            </select>
+    <div class="content">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2>🔧 Control Panel</h2>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="bars">Number of Bars:</label>
+                    <input type="range" id="bars" min="1" max="8" value="4">
+                    <div class="range-display" id="barsDisplay">4 bars</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="voices">Voices:</label>
+                    <select id="voices">
+                        <option value="1">1 Voice</option>
+                        <option value="2">2 Voices</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="instrument">Instrument:</label>
+                    <select id="instrument">
+                        <option value="piano">Piano</option>
+                        <option value="strings">Strings</option>
+                        <option value="synth">Synth</option>
+                        <option value="guitar">Guitar</option>
+                        <option value="flute">Flute</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="shortestNote">Shortest Note:</label>
+                    <select id="shortestNote">
+                        <option value="8">1/8 Note</option>
+                        <option value="16">1/16 Note</option>
+                        <option value="32">1/32 Note</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Syncopated Rhythm:</label>
+                    <div class="toggle-group">
+                        <div class="toggle" id="syncopationToggle"></div>
+                        <span id="syncopationStatus">Off</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button class="preview-btn" id="previewBtn">
+                        👁 Preview Settings
+                    </button>
+                </div>
+            </div>
         </div>
         
-        <div class="control-group">
-            <label for="tempo">Tempo (BPM):</label>
-            <input type="range" id="tempo" min="60" max="180" value="120">
-            <div class="tempo-display">120 BPM</div>
+        <!-- Primary Action -->
+        <div class="generate-section">
+            <button class="generate-btn" id="generateBtn">
+                🎼 Generate Melody
+            </button>
         </div>
         
-        <div class="control-group">
-            <label for="instrument">Instrument:</label>
-            <select id="instrument">
-                <option value="synth">Synthesizer</option>
-                <option value="piano">Piano</option>
-                <option value="guitar">Guitar</option>
-                <option value="organ">Organ</option>
-            </select>
+        <!-- Melody Display Section -->
+        <div class="melody-display">
+            <h2>🎵 Melody Display</h2>
+            <div id="staffArea">
+                <div class="empty-state">
+                    Click "Generate Melody" to create your musical composition
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="bar-labels">
-        <div class="bar-label">Bar 1</div>
-        <div class="bar-label">Bar 2</div>
-        <div class="bar-label">Bar 3</div>
-        <div class="bar-label">Bar 4</div>
-    </div>
-    
-    <div class="melody-grid" id="melodyGrid"></div>
-    
-    <div class="buttons">
-        <button class="btn-primary" onclick="startAudio()">🔊 Enable Audio</button>
-        <button class="btn-primary" onclick="playMelody()">▶ Play Melody</button>
-        <button class="btn-secondary" onclick="stopMelody()">⏹ Stop</button>
-        <button class="btn-success" onclick="generateRandom()">🎲 Random Melody</button>
-        <button class="btn-warning" onclick="clearMelody()">🗑 Clear</button>
-        <button class="btn-primary" onclick="exportMelody()">💾 Export MIDI</button>
-    </div>
-    
-    <div class="notes-info">
-        <strong>How to use:</strong><br>
-        • <strong>FIRST:</strong> Click "Enable Audio" to start sound (required by browsers)<br>
-        • Click on the grid cells to place notes - each column represents a 16th note<br>
-        • Higher rows = higher pitch, lower rows = lower pitch<br>
-        • Use the controls to change scale, tempo, and instrument<br>
-        • Click "Random Melody" to generate inspiration<br>
-        • The melody will loop continuously when played
+        
+        <!-- Interactive Reveal Area -->
+        <div class="reveal-section">
+            <h2>🧩 Interactive Reveal</h2>
+            
+            <div class="reveal-controls" id="revealControls">
+                <!-- Reveal buttons will be generated dynamically -->
+            </div>
+            
+            <div class="playback-controls">
+                <label>Playback Speed:</label>
+                <button class="speed-btn" data-speed="0.25">0.25x</button>
+                <button class="speed-btn" data-speed="0.5">0.5x</button>
+                <button class="speed-btn active" data-speed="0.75">0.75x</button>
+                <button class="speed-btn" data-speed="1">1x</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    let synth;
-    let isPlaying = false;
-    let currentStep = 0;
-    let playInterval;
-    let melody = Array(16).fill(null); // 16 steps for 4 bars
+    // Global variables for melody data
+    let currentMelody = null;
+    let currentSettings = {};
+    let revealedBars = new Set();
+    let playbackSpeed = 0.75;
     
-    const scales = {
-        major: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5'],
-        minor: ['C4', 'D4', 'Eb4', 'F4', 'G4', 'Ab4', 'Bb4', 'C5', 'D5', 'Eb5', 'F5', 'G5'],
-        dorian: ['C4', 'D4', 'Eb4', 'F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'Eb5', 'F5', 'G5'],
-        pentatonic: ['C4', 'D4', 'F4', 'G4', 'A4', 'C5', 'D5', 'F5', 'G5', 'A5', 'C6', 'D6']
-    };
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeControls();
+        setupEventListeners();
+    });
     
-    async function initAudio() {
-        if (Tone.context.state !== 'running') {
-            await Tone.start();
-            console.log('Audio context started');
-        }
-        if (!synth) {
-            updateInstrument();
+    function initializeControls() {
+        // Initialize bars display
+        updateBarsDisplay();
+        
+        // Initialize reveal buttons
+        updateRevealButtons();
+        
+        // Initialize syncopation toggle
+        const toggle = document.getElementById('syncopationToggle');
+        const status = document.getElementById('syncopationStatus');
+        toggle.addEventListener('click', function() {
+            toggle.classList.toggle('active');
+            status.textContent = toggle.classList.contains('active') ? 'On' : 'Off';
+        });
+    }
+    
+    function setupEventListeners() {
+        // Bars slider
+        document.getElementById('bars').addEventListener('input', updateBarsDisplay);
+        
+        // Generate button
+        document.getElementById('generateBtn').addEventListener('click', generateMelody);
+        
+        // Preview button
+        document.getElementById('previewBtn').addEventListener('click', previewSettings);
+        
+        // Speed buttons
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                playbackSpeed = parseFloat(this.dataset.speed);
+            });
+        });
+    }
+    
+    function updateBarsDisplay() {
+        const bars = document.getElementById('bars').value;
+        document.getElementById('barsDisplay').textContent = `${bars} bars`;
+        updateRevealButtons();
+    }
+    
+    function updateRevealButtons() {
+        const bars = parseInt(document.getElementById('bars').value);
+        const container = document.getElementById('revealControls');
+        container.innerHTML = '';
+        
+        for (let i = 1; i <= bars; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'reveal-btn';
+            btn.textContent = `Bar ${i}: Reveal`;
+            btn.dataset.bar = i;
+            btn.disabled = !currentMelody;
+            btn.addEventListener('click', function() {
+                revealBar(i);
+            });
+            container.appendChild(btn);
         }
     }
     
-    function updateInstrument() {
-        if (synth) {
-            synth.dispose();
-        }
-        
-        const instrument = document.getElementById('instrument').value;
-        switch(instrument) {
-            case 'piano':
-                synth = new Tone.Sampler().toDestination();
-                break;
-            case 'guitar':
-                synth = new Tone.PluckSynth().toDestination();
-                break;
-            case 'organ':
-                synth = new Tone.FMSynth().toDestination();
-                break;
-            default:
-                synth = new Tone.Synth().toDestination();
-        }
+    function previewSettings() {
+        const settings = getCurrentSettings();
+        let preview = `Settings Preview:\n`;
+        preview += `• ${settings.bars} bars\n`;
+        preview += `• ${settings.voices} voice(s)\n`;
+        preview += `• Instrument: ${settings.instrument}\n`;
+        preview += `• Shortest note: 1/${settings.shortestNote}\n`;
+        preview += `• Syncopation: ${settings.syncopation ? 'On' : 'Off'}`;
+        alert(preview);
     }
     
-    function createGrid() {
-        const grid = document.getElementById('melodyGrid');
-        const scale = scales[document.getElementById('scale').value];
-        
-        grid.innerHTML = '';
-        
-        // Create grid with 12 rows (notes) and 16 columns (steps)
-        for (let row = 0; row < 12; row++) {
-            for (let col = 0; col < 16; col++) {
-                const cell = document.createElement('div');
-                cell.className = 'note-cell';
-                cell.dataset.row = row;
-                cell.dataset.col = col;
-                cell.textContent = scale[11 - row].replace('4', '').replace('5', '').replace('6', '');
-                
-                cell.onclick = () => toggleNote(row, col);
-                grid.appendChild(cell);
-            }
-        }
+    function getCurrentSettings() {
+        return {
+            bars: parseInt(document.getElementById('bars').value),
+            voices: parseInt(document.getElementById('voices').value),
+            instrument: document.getElementById('instrument').value,
+            shortestNote: parseInt(document.getElementById('shortestNote').value),
+            syncopation: document.getElementById('syncopationToggle').classList.contains('active')
+        };
     }
     
-    function toggleNote(row, col) {
-        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-        const scale = scales[document.getElementById('scale').value];
+    function generateMelody() {
+        currentSettings = getCurrentSettings();
+        console.log('Generating melody with settings:', currentSettings);
         
-        if (melody[col] === row) {
-            // Remove note
-            melody[col] = null;
-            cell.classList.remove('active');
+        // TODO: Implement actual melody generation
+        currentMelody = createDummyMelody(currentSettings);
+        
+        // Display the melody
+        displayMelody(currentMelody);
+        
+        // Enable reveal buttons
+        updateRevealButtons();
+        
+        // Reset revealed bars
+        revealedBars.clear();
+    }
+    
+    function createDummyMelody(settings) {
+        // This is a placeholder - will be replaced with actual melody generation
+        return {
+            bars: settings.bars,
+            voices: settings.voices,
+            notes: Array(settings.bars).fill(null).map((_, i) => ({
+                bar: i + 1,
+                notes: ['C4', 'D4', 'E4', 'F4'] // Dummy notes
+            }))
+        };
+    }
+    
+    function displayMelody(melody) {
+        const staffArea = document.getElementById('staffArea');
+        staffArea.innerHTML = '';
+        
+        // Create staff container
+        const container = document.createElement('div');
+        container.className = 'staff-container';
+        
+        if (melody.voices === 1) {
+            container.appendChild(createStaff('treble'));
         } else {
-            // Clear previous note in this column
-            const prevCell = document.querySelector(`[data-col="${col}"].active`);
-            if (prevCell) {
-                prevCell.classList.remove('active');
-            }
-            
-            // Add new note
-            melody[col] = row;
-            cell.classList.add('active');
-            
-            // Play note preview
-            initAudio().then(() => {
-                if (Tone.context.state === 'running') {
-                    synth.triggerAttackRelease(scale[11 - row], '8n');
-                }
-            }).catch(err => {
-                console.log('Audio not ready:', err);
-            });
-        }
-    }
-    
-    async function startAudio() {
-        try {
-            await Tone.start();
-            if (!synth) {
-                updateInstrument();
-            }
-            document.querySelector('button[onclick="startAudio()"]').style.display = 'none';
-            alert('Audio enabled! You can now play melodies and hear note previews.');
-        } catch (error) {
-            console.error('Failed to start audio:', error);
-            alert('Failed to enable audio. Please try again.');
-        }
-    }
-        if (isPlaying) return;
-        
-        await initAudio();
-        
-        isPlaying = true;
-        currentStep = 0;
-        
-        const tempo = parseInt(document.getElementById('tempo').value);
-        const stepDuration = (60 / tempo / 4) * 1000; // 16th notes
-        
-        playInterval = setInterval(() => {
-            // Clear previous highlight
-            document.querySelectorAll('.note-cell.playing').forEach(cell => {
-                cell.classList.remove('playing');
-            });
-            
-            // Highlight current step
-            const currentCells = document.querySelectorAll(`[data-col="${currentStep}"]`);
-            currentCells.forEach(cell => cell.classList.add('playing'));
-            
-            // Play note if exists
-            if (melody[currentStep] !== null) {
-                const scale = scales[document.getElementById('scale').value];
-                const note = scale[11 - melody[currentStep]];
-                if (Tone.context.state === 'running') {
-                    synth.triggerAttackRelease(note, '8n');
-                }
-            }
-            
-            currentStep = (currentStep + 1) % 16;
-        }, stepDuration);
-    }
-    
-    function stopMelody() {
-        isPlaying = false;
-        if (playInterval) {
-            clearInterval(playInterval);
+            container.appendChild(createStaff('treble'));
+            container.appendChild(createStaff('bass'));
         }
         
-        // Clear highlights
-        document.querySelectorAll('.note-cell.playing').forEach(cell => {
-            cell.classList.remove('playing');
-        });
+        staffArea.appendChild(container);
     }
     
-    function generateRandom() {
-        const scale = scales[document.getElementById('scale').value];
-        melody = Array(16).fill(null);
+    function createStaff(clef) {
+        const staff = document.createElement('div');
+        staff.className = 'staff';
         
-        // Generate a musical pattern
-        for (let i = 0; i < 16; i++) {
-            // Create some rhythm - not every step has a note
-            if (Math.random() > 0.3) {
-                // Favor middle range notes
-                const noteIndex = Math.floor(Math.random() * 8) + 2;
-                melody[i] = noteIndex;
-            }
+        // Create staff lines
+        const staffLines = document.createElement('div');
+        staffLines.className = 'staff-lines';
+        
+        for (let i = 0; i < 5; i++) {
+            const line = document.createElement('div');
+            line.className = 'staff-line';
+            line.style.top = `${i * 20 + 10}px`;
+            staffLines.appendChild(line);
         }
         
-        updateGridDisplay();
+        // Add clef symbol
+        const clefSymbol = document.createElement('div');
+        clefSymbol.className = 'clef';
+        clefSymbol.textContent = clef === 'treble' ? '𝄞' : '𝄢';
+        
+        // Notes area
+        const notesArea = document.createElement('div');
+        notesArea.className = 'notes-area';
+        
+        staff.appendChild(staffLines);
+        staff.appendChild(clefSymbol);
+        staff.appendChild(notesArea);
+        
+        return staff;
     }
     
-    function clearMelody() {
-        melody = Array(16).fill(null);
-        updateGridDisplay();
+    function revealBar(barNumber) {
+        if (!currentMelody) return;
+        
+        revealedBars.add(barNumber);
+        
+        // Update button appearance
+        const btn = document.querySelector(`[data-bar="${barNumber}"]`);
+        btn.classList.add('revealed');
+        btn.textContent = `Bar ${barNumber}: ✓ Revealed`;
+        
+        // TODO: Actually reveal the bar in the staff notation
+        console.log(`Revealing bar ${barNumber}`);
     }
-    
-    function updateGridDisplay() {
-        document.querySelectorAll('.note-cell').forEach(cell => {
-            cell.classList.remove('active');
-        });
-        
-        melody.forEach((note, col) => {
-            if (note !== null) {
-                const cell = document.querySelector(`[data-row="${note}"][data-col="${col}"]`);
-                if (cell) {
-                    cell.classList.add('active');
-                }
-            }
-        });
-    }
-    
-    function exportMelody() {
-        const scale = scales[document.getElementById('scale').value];
-        const tempo = document.getElementById('tempo').value;
-        
-        let midiData = `Tempo: ${tempo} BPM\n`;
-        midiData += `Scale: ${document.getElementById('scale').value}\n`;
-        midiData += `Notes: `;
-        
-        melody.forEach((note, i) => {
-            if (note !== null) {
-                midiData += `${scale[11 - note]}@${i + 1} `;
-            }
-        });
-        
-        const blob = new Blob([midiData], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'melody.txt';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-    
-    // Event listeners
-    document.getElementById('scale').onchange = createGrid;
-    document.getElementById('instrument').onchange = updateInstrument;
-    document.getElementById('tempo').oninput = function() {
-        document.querySelector('.tempo-display').textContent = this.value + ' BPM';
-    };
-    
-    // Initialize
-    createGrid();
 </script>
 ```
 
