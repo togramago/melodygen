@@ -10,9 +10,17 @@
       console.log('VexFlow available:', typeof VexFlow !== 'undefined' ? 'YES' : 'NO');
       console.log('Vex available:', typeof Vex !== 'undefined' ? 'YES' : 'NO');
       console.log('Tone available:', typeof Tone !== 'undefined' ? 'YES' : 'NO');
-      console.log('All global objects:', Object.keys(window).filter(key => 
-        key.includes('vex') || key.includes('Vex') || key.includes('Tone')
-      ));
+      
+      // Check all global objects that might be VexFlow
+      const allGlobals = Object.keys(window);
+      const vexObjects = allGlobals.filter(key => 
+        key.toLowerCase().includes('vex') || 
+        key.toLowerCase().includes('flow') ||
+        key === 'VexFlow' ||
+        key === 'Vex'
+      );
+      console.log('All VexFlow-related global objects:', vexObjects);
+      console.log('All global objects:', allGlobals);
       
       // Check specific VexFlow objects
       if (typeof VexFlow !== 'undefined') {
@@ -20,11 +28,20 @@
         console.log('VexFlow.Factory:', typeof VexFlow.Factory);
         console.log('VexFlow.Flow:', typeof VexFlow.Flow);
         console.log('VexFlow.EasyScore:', typeof VexFlow.EasyScore);
+        console.log('VexFlow keys:', Object.keys(VexFlow));
       }
       if (typeof Vex !== 'undefined') {
         console.log('Vex object:', Vex);
         console.log('Vex.Flow:', typeof Vex.Flow);
+        console.log('Vex keys:', Object.keys(Vex));
       }
+      
+      // Check if any other VexFlow-related objects exist
+      vexObjects.forEach(key => {
+        if (key !== 'VexFlow' && key !== 'Vex') {
+          console.log(`${key} object:`, window[key]);
+        }
+      });
     </script>
     <script src="melody-functions.js"></script>
     <script src="melody-tests.js"></script>

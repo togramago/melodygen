@@ -267,12 +267,12 @@ function drawMelody(melody, timeSignature, numVoices) {
   });
   
   // Check if VexFlow is loaded
-  if (typeof VexFlow === 'undefined') {
+  if (typeof Vex === 'undefined') {
     console.error('❌ VexFlow is not loaded!');
     return;
   }
   
-  console.log('✅ VexFlow is loaded:', VexFlow);
+  console.log('✅ VexFlow is loaded (as Vex):', Vex);
   
   const displayDiv = document.getElementById("melody-display");
   console.log('📱 Display div found:', displayDiv);
@@ -293,167 +293,59 @@ function drawMelody(melody, timeSignature, numVoices) {
   
   console.log(`📏 Container width: ${containerWidth}px, max stave width: ${maxStaveWidth}px`);
   
-  // Get bars from melody
-  const bars = melody.voice1;
-  console.log('🎵 Processing bars:', bars);
+  // Flatten bars to notes for voice 1
+  const voice1Notes = flattenBarsToNotes(melody.voice1);
+  console.log('🎵 Processing voice 1 notes:', voice1Notes);
   
-  if (bars.length === 0) {
-    console.warn('⚠️ No bars found for voice 1');
+  if (voice1Notes.length === 0) {
+    console.warn('⚠️ No notes found for voice 1');
     return;
   }
   
+  // Use the same reliable approach as testVexFlow
+  console.log('🎨 Using reliable VexFlow API...');
   try {
     // Use VexFlow 4.x Factory API
-    const factory = new VexFlow.Factory({
+    const factory = new Vex.Flow.Factory({
       renderer: { elementId: 'melody-display', width: containerWidth, height: 600 }
     });
     
     console.log('✅ VexFlow Factory created:', factory);
     
-    // Process bars one by one
-    let currentStaveY = 20;
-    let currentStaveX = 10;
-    let staveIndex = 0;
-    let currentStave = null;
-    let currentStaveWidth = 0;
-    const clefAndTimeWidth = 80; // Approximate width for clef and time signature
+    // Convert notes to VexFlow 4.x format
+    const vexNotes = voice1Notes.map((note) => {
+      const pitch = note.pitch.slice(0, -1);
+      const octave = note.pitch.slice(-1);
+      const key = `${pitch}${octave}`;
+      
+      // Convert duration format to VexFlow format
+      const vexDuration = DURATION_TO_VEXFLOW[note.duration] || note.duration;
+      
+      console.log(`🎵 Creating VexFlow note: pitch=${pitch}, octave=${octave}, key=${key}, duration=${note.duration} -> ${vexDuration}`);
+      const staveNote = factory.StaveNote({
+        keys: [key],
+        duration: vexDuration,
+      });
+      if (pitch.includes("#")) {
+        staveNote.addModifier(factory.Accidental({ type: "#" }));
+      }
+      return staveNote;
+    });
+    console.log(`🎼 Created ${vexNotes.length} VexFlow notes`);
     
-    for (let barIndex = 0; barIndex < bars.length; barIndex++) {
-      const bar = bars[barIndex];
-      console.log(`🎼 Processing bar ${barIndex + 1}/${bars.length}:`, bar);
-      
-      // Convert bar notes to VexFlow 4.x format
-      const vexNotes = [];
-      for (let i = 0; i < bar.notes.length; i++) {
-        const note = bar.notes[i];
-        const pitch = note.pitch.slice(0, -1);
-        const octave = note.pitch.slice(-1);
-        const key = `${pitch}${octave}`;
-        
-        // Convert duration format to VexFlow format
-        const vexDuration = DURATION_TO_VEXFLOW[note.duration] || note.duration;
-        
-        console.log(`🎵 Creating VexFlow note ${i+1}: pitch=${pitch}, octave=${octave}, key=${key}, duration=${note.duration} -> ${vexDuration}`);
-        
-        try {
-          // Use VexFlow 4.x note creation
-          const staveNote = factory.StaveNote({
-            keys: [key],
-            duration: vexDuration,
-          });
-          
-          if (pitch.includes("#")) {
-            staveNote.addModifier(factory.Accidental({ type: "#" }));
-          }
-          
-          vexNotes.push(staveNote);
-          console.log(`✅ VexFlow note ${i+1} created successfully`);
-        } catch (noteError) {
-          console.error(`❌ Failed to create VexFlow note ${i+1} for ${key}:`, noteError);
-        }
-      }
-      
-      console.log(`🎼 Bar ${barIndex + 1} has ${vexNotes.length} VexFlow notes`);
-      
-      if (vexNotes.length === 0) {
-        console.warn(`⚠️ Bar ${barIndex + 1} has no valid notes, skipping`);
-        continue;
-      }
-      
-      // Create a voice for this bar using VexFlow 4.x API
-      const voice = factory.Voice({time: timeSignature});
-      voice.addTickables(vexNotes);
-      
-      // Check if we need a new stave
-      if (currentStave === null) {
-        // Create new stave using VexFlow 4.x API
-        console.log(`🎼 Creating new stave ${staveIndex + 1} at y=${currentStaveY}`);
-        currentStave = factory.Stave({
-          x: currentStaveX,
-          y: currentStaveY,
-          width: maxStaveWidth
-        });
-        
-        currentStave.addClef('treble').addTimeSignature(timeSignature);
-        console.log('✅ New stave created');
-        currentStaveWidth = clefAndTimeWidth; // Start with clef and time signature width
-      }
-      
-      // Try to add this bar to the current stave
-      try {
-        // Estimate the width needed for this bar
-        const barWidth = vexNotes.length * 30; // Rough estimate: 30px per note
-        const totalWidthNeeded = currentStaveWidth + barWidth;
-        
-        console.log(`📏 Current stave width: ${currentStaveWidth}px, bar width: ${barWidth}px, total needed: ${totalWidthNeeded}px, max: ${maxStaveWidth}px`);
-        
-        if (totalWidthNeeded > maxStaveWidth - 40) {
-          // Not enough space, create new stave
-          console.log(`📏 Not enough space, creating new stave`);
-          
-          // Move to next stave
-          staveIndex++;
-          currentStaveY += staveHeight + staveSpacing;
-          currentStaveX = 10;
-          
-          // Create new stave
-          currentStave = factory.Stave({
-            x: currentStaveX,
-            y: currentStaveY,
-            width: maxStaveWidth
-          });
-          
-          currentStave.addClef('treble').addTimeSignature(timeSignature);
-          console.log(`✅ New stave ${staveIndex + 1} created`);
-          currentStaveWidth = clefAndTimeWidth;
-        }
-        
-        // Add this bar to the current stave using VexFlow 4.x API
-        const system = factory.System();
-        system.addStave({
-          voices: [voice]
-        });
-        
-        console.log(`✅ Bar ${barIndex + 1} added to stave ${staveIndex + 1}`);
-        
-        // Update current stave width
-        currentStaveWidth += barWidth;
-        
-      } catch (error) {
-        console.error(`❌ Error adding bar ${barIndex + 1} to stave:`, error);
-        
-        // Try to create a new stave and add just this bar
-        console.log(`🔄 Trying to create new stave for bar ${barIndex + 1}`);
-        
-        staveIndex++;
-        currentStaveY += staveHeight + staveSpacing;
-        currentStaveX = 10;
-        
-        currentStave = factory.Stave({
-          x: currentStaveX,
-          y: currentStaveY,
-          width: maxStaveWidth
-        });
-        
-        currentStave.addClef('treble').addTimeSignature(timeSignature);
-        
-        try {
-          const system = factory.System();
-          system.addStave({
-            voices: [voice]
-          });
-          
-          console.log(`✅ Bar ${barIndex + 1} added to new stave ${staveIndex + 1}`);
-          currentStaveWidth = clefAndTimeWidth + barWidth;
-        } catch (retryError) {
-          console.error(`❌ Failed to add bar ${barIndex + 1} even to new stave:`, retryError);
-        }
-      }
-    }
+    // Create a voice for all notes
+    const voice = factory.Voice({time: timeSignature});
+    voice.addTickables(vexNotes);
+    
+    // Create a system and add the voice
+    const system = factory.System();
+    system.addStave({
+      voices: [voice]
+    }).addClef('treble').addTimeSignature(timeSignature);
     
     // Draw everything
     factory.draw();
-    console.log(`🎉 drawMelody completed successfully. Processed ${bars.length} bars across ${staveIndex + 1} staves`);
+    console.log(`🎉 drawMelody completed successfully. Processed ${vexNotes.length} notes`);
     
   } catch (error) {
     console.error('❌ Error drawing melody:', error);
@@ -531,18 +423,23 @@ function testVexFlow() {
     
     console.log(`📏 Test dimensions: container=${containerWidth}px, stave=${staveWidth}px, height=${canvasHeight}px`);
     
-    // Use VexFlow 3.x API
-    console.log('🎨 Using VexFlow 3.x API...');
-    const renderer = new Vex.Flow.Renderer(displayDiv, Vex.Flow.Renderer.Backends.SVG);
-    renderer.resize(staveWidth + 20, canvasHeight);
-    const context = renderer.getContext();
+    // Use VexFlow 4.x API
+    console.log('🎨 Using VexFlow 4.x API with Factory...');
+    const factory = new Vex.Flow.Factory({
+      renderer: { elementId: 'melody-display', width: staveWidth + 20, height: canvasHeight }
+    });
     
-    const stave = new Vex.Flow.Stave(10, 20, staveWidth)
-      .addClef("treble")
-      .addTimeSignature("4/4");
-    stave.setContext(context).draw();
+    const score = factory.EasyScore();
+    const system = factory.System();
     
-    console.log('✅ VexFlow test successful - stave drawn');
+    system.addStave({
+      voices: [
+        score.voice(score.notes('C4/q, D4/q, E4/q, F4/q'))
+      ]
+    }).addClef('treble').addTimeSignature('4/4');
+    
+    factory.draw();
+    console.log('✅ VexFlow 4.x test successful');
     return true;
     
   } catch (error) {
