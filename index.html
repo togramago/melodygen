@@ -1,514 +1,568 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src=\"https://unpkg.com/vexflow/releases/vexflow-min.js\"></script>
-    <script src=\"https://unpkg.com/tone\"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vexflow/releases/vexflow-min.js"></script>
+    <script src="https://unpkg.com/tone"></script>
     <title>Melody Generator</title>
     <style>
+      :root {
+        /* Light Mode Colors */
+        --bg-color: #f0f2f5;
+        --text-color: #333;
+        --primary-color: #007bff;
+        --secondary-color: #6c757d;
+        --border-color: #ddd;
+        --card-bg: #fff;
+        --input-bg: #fff;
+        --input-border: #ccc;
+        --button-bg: var(--primary-color);
+        --button-text: #fff;
+        --accent-color: #28a745; /* For generate button */
+      }
+
+      @media (prefers-color-scheme: dark) {
         :root {
-            / Light Mode Colors /
-            --bg-color: #f0f2f5;
-            --text-color: #333;
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --border-color: #ddd;
-            --card-bg: #fff;
-            --input-bg: #fff;
-            --input-border: #ccc;
-            --button-bg: var(--primary-color);
-            --button-text: #fff;
-            --accent-color: #28a745; / For generate button /
+          /* Dark Mode Colors */
+          --bg-color: #2c3e50;
+          --text-color: #ecf0f1;
+          --primary-color: #3498db;
+          --secondary-color: #95a5a6;
+          --border-color: #444;
+          --card-bg: #34495e;
+          --input-bg: #2c3e50;
+          --input-border: #555;
+          --button-bg: var(--primary-color);
+          --button-text: #fff;
+          --accent-color: #2ecc71; /* For generate button */
         }
+      }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                / Dark Mode Colors /
-                --bg-color: #2c3e50;
-                --text-color: #ecf0f1;
-                --primary-color: #3498db;
-                --secondary-color: #95a5a6;
-                --border-color: #444;
-                --card-bg: #34495e;
-                --input-bg: #2c3e50;
-                --input-border: #555;
-                --button-bg: var(--primary-color);
-                --button-text: #fff;
-                --accent-color: #2ecc71; / For generate button /
-            }
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+        transition:
+          background-color 0.3s,
+          color 0.3s;
+      }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s;
-        }
+      .container {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 100%;
+        max-width: 900px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        border: 1px solid var(--border-color);
+      }
 
-        .container {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            width: 100%;
-            max-width: 900px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            border: 1px solid var(--border-color);
-        }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
 
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+      h1 {
+        color: var(--primary-color);
+        font-size: 2.5em;
+        margin: 0;
+      }
 
-        h1 {
-            color: var(--primary-color);
-            font-size: 2.5em;
-            margin: 0;
-        }
+      .section-title {
+        font-size: 1.4em;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 5px;
+      }
 
-        .section-title {
-            font-size: 1.4em;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 5px;
-        }
+      #control-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--input-bg);
+      }
 
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        font-weight: bold;
+        color: var(--text-color);
+        font-size: 0.95em;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        -webkit-appearance: none;
+        height: 8px;
+        border-radius: 5px;
+        background: var(--border-color);
+        outline: none;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        border: 2px solid var(--card-bg);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        border: 2px solid var(--card-bg);
+      }
+
+      select,
+      input[type="checkbox"] {
+        padding: 10px;
+        border: 1px solid var(--input-border);
+        border-radius: 5px;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        transition: border-color 0.3s;
+      }
+
+      select:focus,
+      input[type="checkbox"]:focus {
+        border-color: var(--primary-color);
+        outline: none;
+      }
+
+      .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 24px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--secondary-color);
+        transition: 0.4s;
+        border-radius: 24px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--primary-color);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(16px);
+      }
+
+      .preview-icon {
+        font-size: 1.8em;
+        cursor: pointer;
+        color: var(--primary-color);
+        align-self: flex-end;
+        margin-left: auto;
+        padding: 5px;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+      }
+
+      .preview-icon:hover {
+        background-color: rgba(var(--primary-color), 0.1);
+      }
+
+      #generate-melody-btn {
+        background-color: var(--accent-color);
+        color: var(--button-text);
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.3em;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition:
+          background-color 0.3s,
+          transform 0.1s;
+        width: fit-content;
+        align-self: center;
+        margin-top: 10px;
+      }
+
+      #generate-melody-btn:hover {
+        background-color: #218838; /* Darker green for hover */
+        transform: translateY(-2px);
+      }
+
+      #generate-melody-btn:active {
+        transform: translateY(0);
+      }
+
+      #melody-display {
+        min-height: 200px;
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-style: italic;
+        color: var(--secondary-color);
+        padding: 20px;
+        text-align: center;
+        background-color: var(--input-bg);
+      }
+
+      #interactive-reveal {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--input-bg);
+      }
+
+      .reveal-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .reveal-buttons button {
+        background-color: var(--primary-color);
+        color: var(--button-text);
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .reveal-buttons button:hover {
+        background-color: #0056b3; /* Darker blue */
+      }
+
+      .playback-speed {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 10px;
+      }
+
+      .playback-speed button {
+        background-color: var(--secondary-color);
+        color: var(--button-text);
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .playback-speed button:hover {
+        background-color: #5a6268; /* Darker gray */
+      }
+
+      .playback-speed button.active {
+        background-color: var(--accent-color);
+        font-weight: bold;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
         #control-panel {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: var(--input-bg);
+          grid-template-columns: 1fr;
         }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .container {
+          padding: 20px;
         }
-
-        label {
-            font-weight: bold;
-            color: var(--text-color);
-            font-size: 0.95em;
+        h1 {
+          font-size: 2em;
         }
-
-        input[type="range"] {
-            width: 100%;
-            -webkit-appearance: none;
-            height: 8px;
-            border-radius: 5px;
-            background: var(--border-color);
-            outline: none;
-            opacity: 0.7;
-            transition: opacity .2s;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: pointer;
-            border: 2px solid var(--card-bg);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: pointer;
-            border: 2px solid var(--card-bg);
-        }
-
-        select,
-        input[type="checkbox"] {
-            padding: 10px;
-            border: 1px solid var(--input-border);
-            border-radius: 5px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1em;
-            transition: border-color 0.3s;
-        }
-
-        select:focus,
-        input[type="checkbox"]:focus {
-            border-color: var(--primary-color);
-            outline: none;
-        }
-
-        .toggle-switch {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 24px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--secondary-color);
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--primary-color);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(16px);
-        }
-
-        .preview-icon {
-            font-size: 1.8em;
-            cursor: pointer;
-            color: var(--primary-color);
-            align-self: flex-end;
-            margin-left: auto;
-            padding: 5px;
-            border-radius: 50%;
-            transition: background-color 0.2s;
-        }
-
-        .preview-icon:hover {
-            background-color: rgba(var(--primary-color), 0.1);
-        }
-
         #generate-melody-btn {
-            background-color: var(--accent-color);
-            color: var(--button-text);
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.3em;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
-            width: fit-content;
-            align-self: center;
-            margin-top: 10px;
+          width: 100%;
         }
-
-        #generate-melody-btn:hover {
-            background-color: #218838; / Darker green for hover /
-            transform: translateY(-2px);
-        }
-
-        #generate-melody-btn:active {
-            transform: translateY(0);
-        }
-
-        #melody-display {
-            min-height: 200px;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-style: italic;
-            color: var(--secondary-color);
-            padding: 20px;
-            text-align: center;
-            background-color: var(--input-bg);
-        }
-
-        #interactive-reveal {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: var(--input-bg);
-        }
-
-        .reveal-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .reveal-buttons button {
-            background-color: var(--primary-color);
-            color: var(--button-text);
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .reveal-buttons button:hover {
-            background-color: #0056b3; / Darker blue /
-        }
-
-        .playback-speed {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 10px;
-        }
-
-        .playback-speed button {
-            background-color: var(--secondary-color);
-            color: var(--button-text);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .playback-speed button:hover {
-            background-color: #5a6268; / Darker gray /
-        }
-
-        .playback-speed button.active {
-            background-color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        / Responsive adjustments /
-        @media (max-width: 768px) {
-            #control-panel {
-                grid-template-columns: 1fr;
-            }
-            .container {
-                padding: 20px;
-            }
-            h1 {
-                font-size: 2em;
-            }
-            #generate-melody-btn {
-                width: 100%;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>🎵 Melody Generator</h1>
-        </header>
+      <header>
+        <h1>🎵 Melody Generator</h1>
+      </header>
 
-        <section id="control-panel">
-            <h2 class="section-title">🔧 Control Panel</h2>
+      <section id="control-panel">
+        <div class="control-group">
+          <label for="bars-slider">Bars: <span id="bars-value">4</span></label>
+          <input type="range" id="bars-slider" min="1" max="8" value="4" />
+        </div>
 
-            <div class="control-group">
-                <label for="bars-slider">Bars: <span id="bars-value">4</span></label>
-                <input type="range" id="bars-slider" min="1" max="8" value="4">
-            </div>
+        <div class="control-group">
+          <label for="voices-selector">Voices:</label>
+          <select id="voices-selector">
+            <option value="1">1 Voice</option>
+            <option value="2">2 Voices</option>
+          </select>
+        </div>
 
-            <div class="control-group">
-                <label for="voices-selector">Voices:</label>
-                <select id="voices-selector">
-                    <option value="1">1 Voice</option>
-                    <option value="2">2 Voices</option>
-                </select>
-            </div>
+        <div class="control-group">
+          <label for="instrument-dropdown">Instrument:</label>
+          <select id="instrument-dropdown">
+            <option value="piano">Piano</option>
+            <option value="strings">Strings</option>
+            <option value="synth">Synth</option>
+            <option value="guitar">Guitar</option>
+            <option value="flute">Flute</option>
+          </select>
+        </div>
 
-            <div class="control-group">
-                <label for="instrument-dropdown">Instrument:</label>
-                <select id="instrument-dropdown">
-                    <option value="piano">Piano</option>
-                    <option value="strings">Strings</option>
-                    <option value="synth">Synth</option>
-                    <option value="guitar">Guitar</option>
-                    <option value="flute">Flute</option>
-                </select>
-            </div>
+        <div class="control-group">
+          <label for="shortest-note-dropdown">Shortest Note:</label>
+          <select id="shortest-note-dropdown">
+            <option value="1/8">1/8</option>
+            <option value="1/16">1/16</option>
+            <option value="1/32">1/32</option>
+          </select>
+        </div>
 
-            <div class="control-group">
-                <label for="shortest-note-dropdown">Shortest Note:</label>
-                <select id="shortest-note-dropdown">
-                    <option value="1/8">1/8</option>
-                    <option value="1/16">1/16</option>
-                    <option value="1/32">1/32</option>
-                </select>
-            </div>
+        <div
+          class="control-group toggle-switch"
+          style="
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <label for="syncopated-rhythm-toggle">Dotted:</label>
+          <label class="switch">
+            <input type="checkbox" id="syncopated-rhythm-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
 
-            <div class="control-group toggle-switch">                
-                <label for="syncopated-rhythm-toggle">Syncopated Rhythm:</label>
-                <label class="switch">                    
-                <input type="checkbox" id="syncopated-rhythm-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="control-group">
-                <label for="tempo-slider">Tempo (BPM): <span id="tempo-value">120</span></label>
-                <input type="range" id="tempo-slider" min="60" max="200" value="120">
-            </div>
-            
-            <div class="control-group">
-                <label>Musical Key:</label>
-                <span id="musical-key-display">Not Generated Yet</span>
-            </div>
+        <div class="control-group">
+          <label for="tempo-slider"
+            >Tempo (BPM): <span id="tempo-value">120</span></label
+          >
+          <input
+            type="range"
+            id="tempo-slider"
+            min="60"
+            max="200"
+            value="120"
+          />
+        </div>
 
-            <div class="control-group" style="grid-column: span 1; display: flex; justify-content: flex-end; align-items: center;">
-                <span class="preview-icon" title="Preview Melody">👁️</span>
-            </div>
-        </section>
+        <div class="control-group">
+          <label>Musical Key:</label>
+          <span id="musical-key-display">Not Generated Yet</span>
+        </div>
 
-        <button id="generate-melody-btn">Generate Melody</button>
+        <div
+          class="control-group"
+          style="
+            grid-column: span 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+          "
+        >
+          <span class="preview-icon" title="Preview Melody">👁️</span>
+        </div>
+      </section>
 
-        <section id="melody-display">
-            <h2 class="section-title">🎼 Melody Display</h2>
-            <p>Melody will be displayed here after generation.</p>
-            <!-- Staff lines will be rendered here dynamically -->
-        </section>
+      <button id="generate-melody-btn">Generate Melody</button>
 
-        <section id="interactive-reveal">
-            <h2 class="section-title">🧩 Interactive Reveal Area</h2>
-            <div class="reveal-buttons">
-                <!-- Reveal buttons for bars will be generated here -->
-                <button>Bar 1: [Reveal]</button>
-                <button>Bar 2: [Reveal]</button>
-                <button>Bar 3: [Reveal]</button>
-                <button>Bar 4: [Reveal]</button>
-            </div>
-            <div class="playback-speed">
-                <label>Playback Speed:</label>
-                <button data-speed="0.25">0.25x</button>
-                <button data-speed="0.5">0.5x</button>
-                <button data-speed="0.75">0.75x</button>
-                <button data-speed="1" class="active">1x</button>
-            </div>
-        </section>
+      <section id="melody-display">
+        <p>Melody will be displayed here after generation.</p>
+        <!-- Staff lines will be rendered here dynamically -->
+      </section>
+
+      <section id="interactive-reveal">
+        <div class="reveal-buttons">
+          <!-- Reveal buttons for bars will be generated here -->
+          <button>Bar 1: [Reveal]</button>
+          <button>Bar 2: [Reveal]</button>
+          <button>Bar 3: [Reveal]</button>
+          <button>Bar 4: [Reveal]</button>
+        </div>
+        <div class="playback-speed">
+          <label>Playback Speed:</label>
+          <button data-speed="0.25">0.25x</button>
+          <button data-speed="0.5">0.5x</button>
+          <button data-speed="0.75">0.75x</button>
+          <button data-speed="1" class="active">1x</button>
+        </div>
+      </section>
     </div>
 
     <script>
-                Tone.Transport.start();
+      // Initialize Tone.js
+      document.addEventListener("DOMContentLoaded", function () {
+        Tone.Transport.start();
+      });
+
+      function generateNoteSequence(
+        numBars,
+        timeSignature,
+        scale,
+        startOctave,
+        shortestNote,
+        isBassline = false,
+      ) {
+        const [beatsPerBar, beatUnit] = timeSignature.split("/").map(Number);
+        const barDuration = (4 / beatUnit) * beatsPerBar; // In whole notes
+        const notes = [];
+        let currentTime = 0;
+
+        const possibleDurations = Object.keys(DURATION_VALUES).filter(
+          (d) => DURATION_VALUES[d] <= DURATION_VALUES[shortestNote],
+        );
+
+        for (let i = 0; i < numBars; i++) {
+          let currentBarDuration = 0;
+          while (currentBarDuration < barDuration) {
+            let durationStr =
+              possibleDurations[
+                Math.floor(Math.random() * possibleDurations.length)
+              ];
+            let durationVal = DURATION_VALUES[durationStr];
+
+            if (currentBarDuration + durationVal > barDuration) {
+              // Find a duration that fits perfectly
+              const remainingDuration = barDuration - currentBarDuration;
+              const fittingDuration = Object.entries(DURATION_VALUES).find(
+                ([, val]) => Math.abs(val - remainingDuration) < 0.001,
+              );
+              if (fittingDuration) {
+                durationStr = fittingDuration[0];
+                durationVal = fittingDuration[1];
+              } else {
+                // Should not happen often with small subdivisions
+                break;
+              }
             }
 
-            function generateNoteSequence(numBars, timeSignature, scale, startOctave, shortestNote, isBassline = false) {
-                const [beatsPerBar, beatUnit] = timeSignature.split('/').map(Number);
-                const barDuration = (4 / beatUnit) * beatsPerBar; // In whole notes
-                const notes = [];
-                let currentTime = 0;
+            const noteIndex = scale[Math.floor(Math.random() * scale.length)];
+            const octave =
+              startOctave + (isBassline ? 0 : Math.floor(Math.random() * 2));
+            const pitch = NOTES[noteIndex] + octave;
 
-                const possibleDurations = Object.keys(DURATION_VALUES).filter(d => DURATION_VALUES[d] <= DURATION_VALUES[shortestNote]);
+            notes.push({ time: currentTime, pitch, duration: durationStr });
+            currentBarDuration += durationVal;
+            currentTime += durationVal;
+          }
+        }
+        return notes;
+      }
 
-                for (let i = 0; i < numBars; i++) {
-                    let currentBarDuration = 0;
-                    while (currentBarDuration < barDuration) {
-                        let durationStr = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
-                        let durationVal = DURATION_VALUES[durationStr];
+      function drawMelody(melody, timeSignature, numVoices) {
+        const displayDiv = document.getElementById("melody-display");
+        displayDiv.innerHTML = "";
+        const renderer = new Vex.Flow.Renderer(
+          displayDiv,
+          Vex.Flow.Renderer.Backends.SVG,
+        );
+        renderer.resize(800, numVoices === 2 ? 250 : 150);
+        const context = renderer.getContext();
 
-                        if (currentBarDuration + durationVal > barDuration) {
-                            // Find a duration that fits perfectly
-                            const remainingDuration = barDuration - currentBarDuration;
-                            const fittingDuration = Object.entries(DURATION_VALUES).find(([, val]) => Math.abs(val - remainingDuration) < 0.001);
-                            if (fittingDuration) {
-                                durationStr = fittingDuration[0];
-                                durationVal = fittingDuration[1];
-                            } else { // Should not happen often with small subdivisions
-                                break;
-                            }
-                        }
-
-                        const noteIndex = scale[Math.floor(Math.random() * scale.length)];
-                        const octave = startOctave + (isBassline ? 0 : Math.floor(Math.random() * 2));
-                        const pitch = NOTES[noteIndex] + octave;
-
-                        notes.push({ time: currentTime, pitch, duration: durationStr });
-                        currentBarDuration += durationVal;
-                        currentTime += durationVal;
-                    }
-                }
-                return notes;
-            }
-
-            function drawMelody(melody, timeSignature, numVoices) {
-                displayDiv.innerHTML = '';
-                const renderer = new Renderer(displayDiv, Renderer.Backends.SVG);
-                renderer.resize(800, numVoices === 2 ? 250 : 150);
-                const context = renderer.getContext();
-
-                const stave1 = new Stave(10, 20, 780).addClef('treble').addTimeSignature(timeSignature);
-                stave1.setContext(context).draw();
-                const vexNotes1 = melody.voice1.map(note => {
-                    const pitch = note.pitch.slice(0, -1);
-                    const octave = note.pitch.slice(-1);
-                    const key = `${pitch}/${octave}`
-                    const staveNote = new StaveNote({ keys: [key], duration: note.duration.replace('n', '') });
-                    if (pitch.includes('#')) {
-                        staveNote.addModifier(new Accidental('#'));
-                    }
-                    return staveNote;
-                });
-                if (vexNotes1.length > 0) {
-                    Formatter.FormatAndDraw(context, stave1, vexNotes1);
-                }
-
-                if (numVoices === 2 && melody.voice2.length > 0) {
-                    const stave2 = new Stave(10, 130, 780).addClef('bass').addTimeSignature(timeSignature);
-                    stave2.setContext(context).draw();
-                    const vexNotes2 = melody.voice2.map(note => {
-                        const pitch = note.pitch.slice(0, -1);
-                        const octave = note.pitch.slice(-1);
-                        const key = `${pitch}/${octave}`
-                        const staveNote = new StaveNote({ keys: [key], duration: note.duration.replace('n', '') });
-                        if (pitch.includes('#')) {
-                            staveNote.addModifier(new Accidental('#'));
-                        }
-                        return staveNote;
-                    });
-                    if (vexNotes2.length > 0) {
-                        Formatter.FormatAndDraw(context, stave2, vexNotes2);
-                    }
-                }
-            }
+        const stave1 = new Vex.Flow.Stave(10, 20, 780)
+          .addClef("treble")
+          .addTimeSignature(timeSignature);
+        stave1.setContext(context).draw();
+        const vexNotes1 = melody.voice1.map((note) => {
+          const pitch = note.pitch.slice(0, -1);
+          const octave = note.pitch.slice(-1);
+          const key = `${pitch}/${octave}`;
+          const staveNote = new Vex.Flow.StaveNote({
+            keys: [key],
+            duration: note.duration.replace("n", ""),
+          });
+          if (pitch.includes("#")) {
+            staveNote.addModifier(new Vex.Flow.Accidental("#"));
+          }
+          return staveNote;
         });
+        if (vexNotes1.length > 0) {
+          Vex.Flow.Formatter.FormatAndDraw(context, stave1, vexNotes1);
+        }
+
+        if (numVoices === 2 && melody.voice2.length > 0) {
+          const stave2 = new Vex.Flow.Stave(10, 130, 780)
+            .addClef("bass")
+            .addTimeSignature(timeSignature);
+          stave2.setContext(context).draw();
+          const vexNotes2 = melody.voice2.map((note) => {
+            const pitch = note.pitch.slice(0, -1);
+            const octave = note.pitch.slice(-1);
+            const key = `${pitch}/${octave}`;
+            const staveNote = new Vex.Flow.StaveNote({
+              keys: [key],
+              duration: note.duration.replace("n", ""),
+            });
+            if (pitch.includes("#")) {
+              staveNote.addModifier(new Vex.Flow.Accidental("#"));
+            }
+            return staveNote;
+          });
+          if (vexNotes2.length > 0) {
+            Vex.Flow.Formatter.FormatAndDraw(context, stave2, vexNotes2);
+          }
+        }
+      }
     </script>
-</body>
+  </body>
 </html>
