@@ -173,22 +173,10 @@ function generateNoteSequence(
   let currentTime = 0;
 
   console.log('📊 Calculated values:', { beatsPerBar, beatUnit, barDuration });
-  console.log('📊 Bar duration in whole notes:', barDuration);
-  console.log('📊 Bar duration check - 4/4 should be 4, 3/4 should be 3, 2/4 should be 2');
-
-  // Test createBar function with simple inputs
-  console.log('🧪 Testing createBar function...');
-  const testBar = createBar(4, ['1/4', '1/2'], scale, 4, false, 0);
-  console.log('🧪 Test bar result:', testBar);
-  console.log('🧪 Test bar duration:', testBar.reduce((sum, note) => sum + DURATION_VALUES[note.duration], 0));
-
+  
   const possibleDurations = Object.keys(DURATION_VALUES).filter(
     (d) => DURATION_VALUES[d] <= DURATION_VALUES[shortestNote],
   );
-
-  console.log('⏱️ Possible durations:', possibleDurations);
-  console.log('⏱️ Shortest note setting:', shortestNote);
-  console.log('⏱️ Shortest note value:', DURATION_VALUES[shortestNote]);
   
   // Check if we have enough possible durations
   if (possibleDurations.length === 0) {
@@ -206,8 +194,6 @@ function generateNoteSequence(
     
     // Verify the bar was filled properly
     const totalBarDuration = barNotes.reduce((sum, note) => sum + DURATION_VALUES[note.duration], 0);
-    console.log(`📊 Bar ${i + 1} duration check: ${totalBarDuration}/${barDuration} (${Math.round(totalBarDuration/barDuration*100)}%)`);
-    console.log(`📊 Bar ${i + 1} notes:`, barNotes);
     
     if (barNotes.length === 0) {
       console.warn(`⚠️ Bar ${i + 1} has no notes!`);
