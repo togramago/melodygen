@@ -259,68 +259,89 @@ function drawMelody(melody, timeSignature, numVoices) {
     let currentY = 10;
     const staveWidth = 150;
     const staveHeight = 100;
+    const maxStaveWidth = 750; // Maximum width before wrapping
     let staveIndex = 0;
+    let barIndex = 0;
     
-    // Process each bar separately
-    for (let barIndex = 0; barIndex < melody.bars.length; barIndex++) {
-      const bar = melody.bars[barIndex];
-      console.log(`🎼 Processing bar ${barIndex + 1}:`, bar);
+    while (barIndex < melody.bars.length) {
+      // Calculate how many bars can fit on this row
+      const barsPerRow = Math.floor((maxStaveWidth - currentX) / (staveWidth + 10));
+      const barsToDraw = Math.min(barsPerRow, melody.bars.length - barIndex);
+      const rowWidth = barsToDraw * staveWidth + (barsToDraw - 1) * 10;
       
-      // Create stave
-      const stave = new Vex.Flow.Stave(currentX, currentY, staveWidth);
+      console.log(`📊 Row ${staveIndex + 1}: fitting ${barsToDraw} bars, width: ${rowWidth}`);
+      
+      // Create one wide stave for this row
+      const stave = new Vex.Flow.Stave(currentX, currentY, rowWidth);
       stave.addClef('treble').addTimeSignature(timeSignature);
       stave.setContext(context).draw();
       
-      // Create notes for this bar
-      const notes = bar.map(note => {
-        // Convert note format from "C5" to "c/5" for VexFlow
-        let noteKey = note.pitch;
-        if (noteKey.includes('#')) {
-          // Handle sharps: "C#5" -> "c#/5"
-          const match = noteKey.match(/^([A-G]#?)(\d+)$/);
-          if (match) {
-            const noteName = match[1].toLowerCase();
-            const octave = match[2];
-            noteKey = `${noteName}/${octave}`;
-          }
-        } else {
-          // Handle regular notes: "C5" -> "c/5"
-          const match = noteKey.match(/^([A-G])(\d+)$/);
-          if (match) {
-            const noteName = match[1].toLowerCase();
-            const octave = match[2];
-            noteKey = `${noteName}/${octave}`;
-          }
-        }
+      // Draw bars within this stave
+      for (let i = 0; i < barsToDraw; i++) {
+        const bar = melody.bars[barIndex + i];
+        console.log(`🎼 Processing bar ${barIndex + i + 1} on stave ${staveIndex + 1}:`, bar);
         
-        const vexFlowDuration = DURATION_TO_VEXFLOW[note.duration] || 'q'; // Default to quarter note if mapping not found
-        console.log(`🎵 Creating note: ${note.pitch} -> ${noteKey}, duration: ${note.duration} -> ${vexFlowDuration}`);
-        
-        return new Vex.Flow.StaveNote({
-          clef: 'treble',
-          keys: [noteKey],
-          duration: vexFlowDuration
+        // Create notes for this bar
+        const notes = bar.map(note => {
+          // Convert note format from "C5" to "c/5" for VexFlow
+          let noteKey = note.pitch;
+          if (noteKey.includes('#')) {
+            // Handle sharps: "C#5" -> "c#/5"
+            const match = noteKey.match(/^([A-G]#?)(\d+)$/);
+            if (match) {
+              const noteName = match[1].toLowerCase();
+              const octave = match[2];
+              noteKey = `${noteName}/${octave}`;
+            }
+          } else {
+            // Handle regular notes: "C5" -> "c/5"
+            const match = noteKey.match(/^([A-G])(\d+)$/);
+            if (match) {
+              const noteName = match[1].toLowerCase();
+              const octave = match[2];
+              noteKey = `${noteName}/${octave}`;
+            }
+          }
+          
+          const vexFlowDuration = DURATION_TO_VEXFLOW[note.duration] || 'q'; // Default to quarter note if mapping not found
+          console.log(`🎵 Creating note: ${note.pitch} -> ${noteKey}, duration: ${note.duration} -> ${vexFlowDuration}`);
+          
+          return new Vex.Flow.StaveNote({
+            clef: 'treble',
+            keys: [noteKey],
+            duration: vexFlowDuration
+          });
         });
-      });
-      
-      console.log(`🎵 Created ${notes.length} notes for bar ${barIndex + 1}`);
-      
-      // Create voice and add notes for this bar
-      const voice = new Vex.Flow.Voice({ time: { num_beats: beatsPerBar, beat_value: beatValue } });
-      voice.addTickables(notes);
-      
-      // Format and draw - this sets up the tick context
-      new Vex.Flow.Formatter().joinVoices([voice]).format([voice], staveWidth - 20);
-      voice.draw(context, stave);
-      
-      // Move to next stave
-      currentX += staveWidth + 10;
-      if (currentX + staveWidth > 750) {
-        currentX = 10;
-        currentY += staveHeight + 20;
+        
+        console.log(`🎵 Created ${notes.length} notes for bar ${barIndex + i + 1}`);
+        
+        // Create voice and add notes for this bar
+        const voice = new Vex.Flow.Voice({ time: { num_beats: beatsPerBar, beat_value: beatValue } });
+        voice.addTickables(notes);
+        
+        // Add bar line to the voice
+        const barLine = new Vex.Flow.BarNote();
+        voice.addTickable(barLine);
+        
+        // Calculate position within the stave
+        const barX = currentX + i * (staveWidth + 10);
+        
+        // Create a temporary stave for this bar positioned within the main stave
+        const tempStave = new Vex.Flow.Stave(barX, currentY, staveWidth);
+        tempStave.setContext(context);
+        
+        // Format and draw - this sets up the tick context
+        new Vex.Flow.Formatter().joinVoices([voice]).format([voice], staveWidth - 20);
+        voice.draw(context, tempStave);
       }
       
+      console.log(`📊 Stave ${staveIndex + 1} contains ${barsToDraw} bars`);
+      
+      // Move to next stave row
+      currentX = 10;
+      currentY += staveHeight + 20;
       staveIndex++;
+      barIndex += barsToDraw;
     }
     
     console.log('✅ Melody drawing completed successfully');
