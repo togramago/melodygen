@@ -36,8 +36,6 @@ const TIME_SIGNATURES = {
 
 // Function to generate scale notes array
 function generateScale(rootNote, scaleType) {
-  console.log(`🎼 Generating ${scaleType} scale starting from ${rootNote}`);
-  
   // Find the root note index
   const rootIndex = NOTES.indexOf(rootNote);
   if (rootIndex === -1) {
@@ -58,7 +56,6 @@ function generateScale(rootNote, scaleType) {
     return noteIndex;
   });
   
-  console.log(`✅ Generated ${scaleType} scale for ${rootNote}:`, scaleNotes);
   return scaleNotes;
 }
 
@@ -67,11 +64,8 @@ function createBar(barDuration, possibleDurations, scale, startOctave, isBasslin
   let currentBarDuration = 0;
   let time = currentTime;
 
-  console.log(`🎼 Creating bar: duration=${barDuration}, possibleDurations=${possibleDurations}`);
-
   // Sort durations from longest to shortest for better filling
   const sortedDurations = [...possibleDurations].sort((a, b) => DURATION_VALUES[b] - DURATION_VALUES[a]);
-  console.log(`🎵 Sorted durations: ${sortedDurations}`);
 
   while (currentBarDuration < barDuration) {
     // Try to find a duration that fits
@@ -92,16 +86,12 @@ function createBar(barDuration, possibleDurations, scale, startOctave, isBasslin
     if (!durationStr) {
       durationStr = sortedDurations[sortedDurations.length - 1];
       durationVal = DURATION_VALUES[durationStr];
-      console.log(`⚠️ No duration fits perfectly, using shortest: ${durationStr}`);
     }
-
-    console.log(`🎵 Selected duration: ${durationStr} (value: ${durationVal}), currentBarDuration: ${currentBarDuration}`);
 
     // Check if this would exceed the bar
     if (currentBarDuration + durationVal > barDuration) {
       // Find a duration that fits exactly
       const remainingDuration = barDuration - currentBarDuration;
-      console.log(`🎵 Remaining duration: ${remainingDuration}`);
       
       const fittingDuration = Object.entries(DURATION_VALUES).find(
         ([, val]) => Math.abs(val - remainingDuration) < 0.001
@@ -110,16 +100,13 @@ function createBar(barDuration, possibleDurations, scale, startOctave, isBasslin
       if (fittingDuration) {
         durationStr = fittingDuration[0];
         durationVal = fittingDuration[1];
-        console.log(`🎵 Adjusted to fitting duration: ${durationStr} (value: ${durationVal})`);
       } else {
         // If no exact fit, use the largest duration that fits
         const largestFitting = sortedDurations.find(dur => DURATION_VALUES[dur] <= remainingDuration);
         if (largestFitting) {
           durationStr = largestFitting;
           durationVal = DURATION_VALUES[durationStr];
-          console.log(`🎵 Using largest fitting duration: ${durationStr} (value: ${durationVal})`);
         } else {
-          console.log(`⚠️ Cannot fill remaining duration: ${remainingDuration}, stopping`);
           break;
         }
       }
@@ -131,36 +118,29 @@ function createBar(barDuration, possibleDurations, scale, startOctave, isBasslin
 
     const note = { time: time, pitch, duration: durationStr };
     barNotes.push(note);
-    console.log(`🎵 Added note: ${pitch} with duration ${durationStr}`);
     
     currentBarDuration += durationVal;
     time += durationVal;
     
     // Safety check to prevent infinite loops
     if (barNotes.length > 20) {
-      console.log(`⚠️ Too many notes generated (${barNotes.length}), stopping`);
       break;
     }
   }
   
-  console.log(`✅ Bar created with ${barNotes.length} notes, total duration: ${currentBarDuration}/${barDuration}:`, barNotes);
   return barNotes;
 }
 
 function flattenBarsToNotes(bars) {
-  if (!bars || !Array.isArray(bars)) {
-    console.log('⚠️ flattenBarsToNotes: Invalid input:', bars);
-    return [];
+  const allNotes = [];
+  
+  for (const bar of bars) {
+    for (const note of bar) {
+      allNotes.push(note);
+    }
   }
   
-  console.log(`📊 flattenBarsToNotes: Processing ${bars.length} bars`);
-  const flattenedNotes = bars.flatMap(bar => {
-    console.log(`📊 Bar ${bar.barNumber}: ${bar.notes.length} notes`);
-    return bar.notes || [];
-  });
-  
-  console.log(`📊 flattenBarsToNotes: Total notes after flattening: ${flattenedNotes.length}`);
-  return flattenedNotes;
+  return allNotes;
 }
 
 function generateNoteSequence(
@@ -259,191 +239,192 @@ function generateNoteSequence(
 }
 
 function drawMelody(melody, timeSignature, numVoices) {
-  console.log('🎨 drawMelody called with:', { melody, timeSignature, numVoices });
-  console.log('📊 Melody structure:', {
-    totalBars: melody.totalBars,
-    voice1Bars: melody.voice1.length,
-    voice1Notes: melody.voice1.reduce((sum, bar) => sum + bar.notes.length, 0)
-  });
+  if (!melody || !melody.bars) {
+    console.error('❌ Invalid melody object for drawing');
+    return;
+  }
   
-  // Check if VexFlow is loaded
+  const display = document.getElementById('melody-display');
+  display.innerHTML = '';
+  
+  // Check if VexFlow is available
   if (typeof Vex === 'undefined') {
-    console.error('❌ VexFlow is not loaded!');
+    console.error('❌ VexFlow not loaded');
+    display.innerHTML = '<p>Error: VexFlow not loaded</p>';
     return;
   }
   
-  console.log('✅ VexFlow is loaded (as Vex):', Vex);
-  
-  const displayDiv = document.getElementById("melody-display");
-  console.log('📱 Display div found:', displayDiv);
-  
-  if (!displayDiv) {
-    console.error('❌ Could not find melody-display div!');
-    return;
-  }
-  
-  console.log('🧹 Clearing display div...');
-  displayDiv.innerHTML = "";
-  
-  // Calculate responsive dimensions
-  const containerWidth = displayDiv.offsetWidth || 800;
-  const maxStaveWidth = containerWidth - 40; // Leave some margin
-  const staveHeight = 150; // Single voice height
-  const staveSpacing = 20; // Space between staves
-  
-  console.log(`📏 Container width: ${containerWidth}px, max stave width: ${maxStaveWidth}px`);
-  
-  // Flatten bars to notes for voice 1
-  const voice1Notes = flattenBarsToNotes(melody.voice1);
-  console.log('🎵 Processing voice 1 notes:', voice1Notes);
-  
-  if (voice1Notes.length === 0) {
-    console.warn('⚠️ No notes found for voice 1');
-    return;
-  }
-  
-  // Use the same reliable approach as testVexFlow
-  console.log('🎨 Using reliable VexFlow API...');
   try {
-    // Use VexFlow 4.x Factory API
-    const factory = new Vex.Flow.Factory({
-      renderer: { elementId: 'melody-display', width: containerWidth, height: 600 }
-    });
+    // Create renderer
+    const renderer = new Vex.Flow.Renderer(display, Vex.Flow.Renderer.Backends.SVG);
+    renderer.resize(800, 200);
+    const context = renderer.getContext();
+    context.scale(0.8, 0.8);
     
-    console.log('✅ VexFlow Factory created:', factory);
+    // Parse time signature
+    const [beatsPerBar, beatValue] = timeSignature.split('/').map(Number);
     
-    // Convert notes to VexFlow 4.x format
-    const vexNotes = voice1Notes.map((note) => {
-      const pitch = note.pitch.slice(0, -1);
-      const octave = note.pitch.slice(-1);
-      const key = `${pitch}${octave}`;
+    // Flatten bars to notes
+    const allNotes = flattenBarsToNotes(melody.bars);
+    
+    // Create staves and add notes
+    let currentX = 10;
+    let currentY = 10;
+    const staveWidth = 150;
+    const staveHeight = 100;
+    let notesPerStave = 8;
+    let staveIndex = 0;
+    
+    while (allNotes.length > 0) {
+      // Create stave
+      const stave = new Vex.Flow.Stave(currentX, currentY, staveWidth);
+      stave.addClef('treble').addTimeSignature(timeSignature);
+      stave.setContext(context).draw();
       
-      // Convert duration format to VexFlow format
-      const vexDuration = DURATION_TO_VEXFLOW[note.duration] || note.duration;
+      // Take notes for this stave
+      const staveNotes = allNotes.splice(0, notesPerStave);
       
-      console.log(`🎵 Creating VexFlow note: pitch=${pitch}, octave=${octave}, key=${key}, duration=${note.duration} -> ${vexDuration}`);
-      const staveNote = factory.StaveNote({
-        keys: [key],
-        duration: vexDuration,
+      // Create notes
+      const notes = staveNotes.map(note => {
+        const noteKey = note.pitch.replace('#', '/');
+        return new Vex.Flow.StaveNote({
+          clef: 'treble',
+          keys: [noteKey],
+          duration: note.duration
+        });
       });
-      if (pitch.includes("#")) {
-        staveNote.addModifier(factory.Accidental({ type: "#" }));
+      
+      // Create voice and add notes
+      const voice = new Vex.Flow.Voice({ time: { num_beats: beatsPerBar, beat_value: beatValue } });
+      voice.addTickables(notes);
+      
+      // Format and draw
+      new Vex.Flow.Formatter().joinVoices([voice]).format([voice], staveWidth - 20);
+      voice.draw(context, stave);
+      
+      // Add bar line
+      const barNote = new Vex.Flow.BarNote();
+      barNote.setContext(context);
+      barNote.draw();
+      
+      // Move to next stave
+      currentX += staveWidth + 10;
+      if (currentX + staveWidth > 750) {
+        currentX = 10;
+        currentY += staveHeight + 20;
       }
-      return staveNote;
-    });
-    console.log(`🎼 Created ${vexNotes.length} VexFlow notes`);
-    
-    // Create a voice for all notes
-    const voice = factory.Voice({time: timeSignature});
-    voice.addTickables(vexNotes);
-    
-    // Create a system and add the voice
-    const system = factory.System();
-    system.addStave({
-      voices: [voice]
-    }).addClef('treble').addTimeSignature(timeSignature);
-    
-    // Draw everything
-    factory.draw();
-    console.log(`🎉 drawMelody completed successfully. Processed ${vexNotes.length} notes`);
+      
+      staveIndex++;
+    }
     
   } catch (error) {
     console.error('❌ Error drawing melody:', error);
+    display.innerHTML = `<p>Error drawing melody: ${error.message}</p>`;
   }
 }
 
-function generateMelody() {
-  console.log('🎼 Starting melody generation...');
+function generateMelodyFromParams(bars, voices, instrument, shortestNote, timeSignature, rootNote, scaleType, syncopated, tempo) {
+  // Parse time signature
+  const [beatsPerBar, beatValue] = timeSignature.split('/').map(Number);
+  const barDuration = beatsPerBar / beatValue * 4; // Convert to quarter note units
   
+  // Generate scale
+  const scale = generateScale(rootNote, scaleType);
+  if (scale.length === 0) {
+    console.error('❌ Failed to generate scale');
+    return null;
+  }
+  
+  // Determine possible note durations based on shortest note
+  const shortestIndex = DURATION_STRINGS.indexOf(shortestNote);
+  const possibleDurations = DURATION_STRINGS.slice(shortestIndex);
+  
+  // Generate bars
+  const melodyBars = [];
+  let currentTime = 0;
+  
+  for (let i = 0; i < bars; i++) {
+    const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, currentTime);
+    melodyBars.push(barNotes);
+    currentTime += barDuration;
+  }
+  
+  // Create melody object
+  const melody = {
+    bars: melodyBars,
+    instrument,
+    tempo,
+    timeSignature,
+    rootNote,
+    scaleType,
+    syncopated
+  };
+  
+  return melody;
+}
+
+// Simple test function to check if VexFlow is working
+function testVexFlow() {
+  const display = document.getElementById('melody-display');
+  display.innerHTML = '';
+  
+  if (typeof Vex === 'undefined') {
+    console.error('❌ VexFlow not loaded');
+    display.innerHTML = '<p>Error: VexFlow not loaded</p>';
+    return;
+  }
+  
+  try {
+    const renderer = new Vex.Flow.Renderer(display, Vex.Flow.Renderer.Backends.SVG);
+    renderer.resize(400, 150);
+    const context = renderer.getContext();
+    
+    const stave = new Vex.Flow.Stave(10, 10, 300);
+    stave.addClef('treble').addTimeSignature('4/4');
+    stave.setContext(context).draw();
+    
+    const notes = [
+      new Vex.Flow.StaveNote({ clef: 'treble', keys: ['c/4'], duration: 'q' }),
+      new Vex.Flow.StaveNote({ clef: 'treble', keys: ['d/4'], duration: 'q' }),
+      new Vex.Flow.StaveNote({ clef: 'treble', keys: ['e/4'], duration: 'q' }),
+      new Vex.Flow.StaveNote({ clef: 'treble', keys: ['f/4'], duration: 'q' })
+    ];
+    
+    const voice = new Vex.Flow.Voice({ time: { num_beats: 4, beat_value: 4 } });
+    voice.addTickables(notes);
+    
+    new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 250);
+    voice.draw(context, stave);
+    
+    console.log('✅ VexFlow test completed successfully');
+    
+  } catch (error) {
+    console.error('❌ VexFlow test failed:', error);
+    display.innerHTML = `<p>VexFlow test failed: ${error.message}</p>`;
+  }
+}
+
+// Function to generate melody from UI controls
+function generateMelody() {
   // Get values from UI controls
   const numBars = parseInt(document.getElementById('bars-slider').value);
   const numVoices = parseInt(document.getElementById('voices-selector').value);
+  const instrument = document.getElementById('instrument-dropdown').value;
   const shortestNote = document.getElementById('shortest-note-dropdown').value;
   const tempo = parseInt(document.getElementById('tempo-slider').value);
   const timeSignature = document.getElementById('time-signature-dropdown').value;
   const rootNote = document.getElementById('root-note-dropdown').value;
   const scaleType = document.getElementById('scale-type-dropdown').value;
+  const syncopated = document.getElementById('syncopated-rhythm-toggle').checked;
   
-  console.log('📊 UI Values:', { numBars, numVoices, shortestNote, tempo, timeSignature, rootNote, scaleType });
+  // Generate melody
+  const melody = generateMelodyFromParams(numBars, numVoices, instrument, shortestNote, timeSignature, rootNote, scaleType, syncopated, tempo);
   
-  // Generate scale based on user selection
-  const scale = generateScale(rootNote, scaleType);
-  if (scale.length === 0) {
-    console.error('❌ Failed to generate scale');
-    return;
-  }
-  
-  const startOctave = 4;
-  
-  // Generate bars for voice 1 (melody)
-  const voice1Bars = generateNoteSequence(numBars, timeSignature, scale, startOctave, shortestNote, false);
-  
-  const melody = {
-    voice1: voice1Bars,
-    totalBars: numBars,
-    timeSignature: timeSignature,
-    tempo: tempo
-  };
-  
-  console.log('🎵 Generated melody:', melody);
-  
-  // Draw the melody
-  drawMelody(melody, timeSignature, 1);
-  
-  // Update musical key display
-  document.getElementById('musical-key-display').textContent = `${rootNote} ${scaleType.charAt(0).toUpperCase() + scaleType.slice(1)}`;
-}
-
-// Simple test function to check if VexFlow is working
-function testVexFlow() {
-  console.log('🧪 Testing VexFlow...');
-  
-  // Check for VexFlow
-  if (typeof Vex === 'undefined') {
-    console.error('❌ VexFlow is not loaded!');
-    console.log('Available global objects:', Object.keys(window).filter(key => key.includes('vex') || key.includes('Vex')));
-    return false;
-  }
-  
-  console.log('✅ VexFlow found (as Vex):', Vex);
-  
-  const displayDiv = document.getElementById("melody-display");
-  if (!displayDiv) {
-    console.error('❌ Could not find melody-display div!');
-    return false;
-  }
-  
-  try {
-    displayDiv.innerHTML = "";
+  if (melody) {
+    // Draw the melody
+    drawMelody(melody, timeSignature, numVoices);
     
-    // Calculate responsive dimensions
-    const containerWidth = displayDiv.offsetWidth || 800;
-    const staveWidth = Math.min(containerWidth - 20, 600); // Test with reasonable width
-    const canvasHeight = 150; // Single voice height
-    
-    console.log(`📏 Test dimensions: container=${containerWidth}px, stave=${staveWidth}px, height=${canvasHeight}px`);
-    
-    // Use VexFlow 4.x API
-    console.log('🎨 Using VexFlow 4.x API with Factory...');
-    const factory = new Vex.Flow.Factory({
-      renderer: { elementId: 'melody-display', width: staveWidth + 20, height: canvasHeight }
-    });
-    
-    const score = factory.EasyScore();
-    const system = factory.System();
-    
-    system.addStave({
-      voices: [
-        score.voice(score.notes('C4/q, D4/q, E4/q, F4/q'))
-      ]
-    }).addClef('treble').addTimeSignature('4/4');
-    
-    factory.draw();
-    console.log('✅ VexFlow 4.x test successful');
-    return true;
-    
-  } catch (error) {
-    console.error('❌ VexFlow test failed:', error);
-    return false;
+    // Update musical key display
+    document.getElementById('musical-key-display').textContent = `${rootNote} ${scaleType.charAt(0).toUpperCase() + scaleType.slice(1)}`;
   }
 } 
