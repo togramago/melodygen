@@ -2,6 +2,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src=\"https://unpkg.com/vexflow/releases/vexflow-min.js\"></script>
+    <script src=\"https://unpkg.com/tone\"></script>
     <title>Melody Generator</title>
     <style>
         :root {
@@ -425,40 +427,88 @@
     </div>
 
     <script>
-        // JavaScript for dynamic UI updates (e.g., slider value, reveal buttons)
-        const barsSlider = document.getElementById('bars-slider');
-        const barsValueSpan = document.getElementById('bars-value');
-        const revealButtonsContainer = document.querySelector('.reveal-buttons');
-
-        barsSlider.addEventListener('input', () => {
-            barsValueSpan.textContent = barsSlider.value;
-            updateRevealButtons(parseInt(barsSlider.value));
-        });
-
-        function updateRevealButtons(numBars) {
-            revealButtonsContainer.innerHTML = '';
-            for (let i = 1; i <= numBars; i++) {
-                const button = document.createElement('button');
-                button.textContent = Bar ${i}: [Reveal];
-                revealButtonsContainer.appendChild(button);
+                Tone.Transport.start();
             }
-        }
 
-        // Initialize reveal buttons on page load
-        updateRevealButtons(parseInt(barsSlider.value));
+            function generateNoteSequence(numBars, timeSignature, scale, startOctave, shortestNote, isBassline = false) {
+                const [beatsPerBar, beatUnit] = timeSignature.split('/').map(Number);
+                const barDuration = (4 / beatUnit) * beatsPerBar; // In whole notes
+                const notes = [];
+                let currentTime = 0;
 
-        // Set 1x playback speed as active by default
-        document.querySelector('.playback-speed button[data-speed="1"]').classList.add('active');
+                const possibleDurations = Object.keys(DURATION_VALUES).filter(d => DURATION_VALUES[d] <= DURATION_VALUES[shortestNote]);
 
-        // Add event listener for playback speed buttons (for visual active state)
-        const playbackSpeedButtons = document.querySelectorAll('.playback-speed button');
-        playbackSpeedButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                playbackSpeedButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-            });
+                for (let i = 0; i < numBars; i++) {
+                    let currentBarDuration = 0;
+                    while (currentBarDuration < barDuration) {
+                        let durationStr = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
+                        let durationVal = DURATION_VALUES[durationStr];
+
+                        if (currentBarDuration + durationVal > barDuration) {
+                            // Find a duration that fits perfectly
+                            const remainingDuration = barDuration - currentBarDuration;
+                            const fittingDuration = Object.entries(DURATION_VALUES).find(([, val]) => Math.abs(val - remainingDuration) < 0.001);
+                            if (fittingDuration) {
+                                durationStr = fittingDuration[0];
+                                durationVal = fittingDuration[1];
+                            } else { // Should not happen often with small subdivisions
+                                break;
+                            }
+                        }
+
+                        const noteIndex = scale[Math.floor(Math.random() * scale.length)];
+                        const octave = startOctave + (isBassline ? 0 : Math.floor(Math.random() * 2));
+                        const pitch = NOTES[noteIndex] + octave;
+
+                        notes.push({ time: currentTime, pitch, duration: durationStr });
+                        currentBarDuration += durationVal;
+                        currentTime += durationVal;
+                    }
+                }
+                return notes;
+            }
+
+            function drawMelody(melody, timeSignature, numVoices) {
+                displayDiv.innerHTML = '';
+                const renderer = new Renderer(displayDiv, Renderer.Backends.SVG);
+                renderer.resize(800, numVoices === 2 ? 250 : 150);
+                const context = renderer.getContext();
+
+                const stave1 = new Stave(10, 20, 780).addClef('treble').addTimeSignature(timeSignature);
+                stave1.setContext(context).draw();
+                const vexNotes1 = melody.voice1.map(note => {
+                    const pitch = note.pitch.slice(0, -1);
+                    const octave = note.pitch.slice(-1);
+                    const key = `${pitch}/${octave}`
+                    const staveNote = new StaveNote({ keys: [key], duration: note.duration.replace('n', '') });
+                    if (pitch.includes('#')) {
+                        staveNote.addModifier(new Accidental('#'));
+                    }
+                    return staveNote;
+                });
+                if (vexNotes1.length > 0) {
+                    Formatter.FormatAndDraw(context, stave1, vexNotes1);
+                }
+
+                if (numVoices === 2 && melody.voice2.length > 0) {
+                    const stave2 = new Stave(10, 130, 780).addClef('bass').addTimeSignature(timeSignature);
+                    stave2.setContext(context).draw();
+                    const vexNotes2 = melody.voice2.map(note => {
+                        const pitch = note.pitch.slice(0, -1);
+                        const octave = note.pitch.slice(-1);
+                        const key = `${pitch}/${octave}`
+                        const staveNote = new StaveNote({ keys: [key], duration: note.duration.replace('n', '') });
+                        if (pitch.includes('#')) {
+                            staveNote.addModifier(new Accidental('#'));
+                        }
+                        return staveNote;
+                    });
+                    if (vexNotes2.length > 0) {
+                        Formatter.FormatAndDraw(context, stave2, vexNotes2);
+                    }
+                }
+            }
         });
-
     </script>
 </body>
 </html>
