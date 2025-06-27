@@ -2,8 +2,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/vexflow/releases/vexflow-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
     <script src="https://unpkg.com/tone"></script>
+    <script>
+      // Debug script loading
+      console.log('🔍 Checking what scripts loaded...');
+      console.log('VexFlow available:', typeof VexFlow !== 'undefined' ? 'YES' : 'NO');
+      console.log('Vex available:', typeof Vex !== 'undefined' ? 'YES' : 'NO');
+      console.log('Tone available:', typeof Tone !== 'undefined' ? 'YES' : 'NO');
+      console.log('All global objects:', Object.keys(window).filter(key => 
+        key.includes('vex') || key.includes('Vex') || key.includes('Tone')
+      ));
+      
+      // Check specific VexFlow objects
+      if (typeof VexFlow !== 'undefined') {
+        console.log('VexFlow object:', VexFlow);
+        console.log('VexFlow.Factory:', typeof VexFlow.Factory);
+        console.log('VexFlow.Flow:', typeof VexFlow.Flow);
+        console.log('VexFlow.EasyScore:', typeof VexFlow.EasyScore);
+      }
+      if (typeof Vex !== 'undefined') {
+        console.log('Vex object:', Vex);
+        console.log('Vex.Flow:', typeof Vex.Flow);
+      }
+    </script>
     <script src="melody-functions.js"></script>
     <script src="melody-tests.js"></script>
     <title>Melody Generator</title>
@@ -264,6 +286,15 @@
         padding: 20px;
         text-align: center;
         background-color: var(--input-bg);
+        width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      #melody-display svg {
+        max-width: 100%;
+        height: auto;
       }
 
       #interactive-reveal {
@@ -386,8 +417,6 @@
             <option value="4/4">4/4</option>
             <option value="3/4">3/4</option>
             <option value="2/4">2/4</option>
-            <option value="6/8">6/8</option>
-            <option value="3/8">3/8</option>
           </select>
         </div>
 
@@ -465,6 +494,18 @@
       </section>
 
       <button id="generate-melody-btn">Generate Melody</button>
+
+      <button id="test-vexflow-btn" style="
+        background-color: var(--secondary-color);
+        color: var(--button-text);
+        border: none;
+        padding: 10px 20px;
+        font-size: 1em;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+        align-self: center;
+      ">Test VexFlow</button>
 
       <section id="melody-display">
         <p>Melody will be displayed here after generation.</p>
@@ -584,10 +625,23 @@
         testBtn.addEventListener('click', runTests);
         document.querySelector('.container').appendChild(testBtn);
 
+        // Add VexFlow test button event listener
+        const testVexFlowBtn = document.getElementById('test-vexflow-btn');
+        if (testVexFlowBtn) {
+          testVexFlowBtn.addEventListener('click', function() {
+            console.log('🧪 VexFlow test button clicked');
+            testVexFlow();
+          });
+        }
+
         // Run tests automatically when page loads
         setTimeout(() => {
           console.log('🚀 Auto-running tests...');
           runTests();
+          
+          // Also test VexFlow
+          console.log('🎨 Testing VexFlow on page load...');
+          testVexFlow();
         }, 1000);
       });
     </script>
