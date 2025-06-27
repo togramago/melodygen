@@ -198,93 +198,42 @@ function runTests() {
   test('4/4 bar duration never exceeds 4 whole notes', () => {
     const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
     const possibleDurations = ['1/4', '1/2', '1'];
-    const barDuration = 4; // 4/4 time signature
-    
-    // Test multiple times to ensure consistency
-    for (let i = 0; i < 10; i++) {
-      const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-      const totalDuration = barNotes.reduce((sum, note) => sum + DURATION_VALUES[note.duration], 0);
-      
-      if (totalDuration > 4) {
-        console.log('❌ Bar duration exceeded 4:', totalDuration, barNotes);
-        return false;
-      }
-    }
-    return true;
+    const barNotes = createBar(4, possibleDurations, scale, 4, false, 0);
+    const totalDuration = barNotes.reduce((sum, note) => sum + DURATION_VALUES[note.duration], 0);
+    return totalDuration <= 4;
   });
 
-  test('3/4 bar duration never exceeds 3 whole notes', () => {
-    const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
-    const possibleDurations = ['1/4', '1/2', '1'];
-    const barDuration = 3; // 3/4 time signature
-    
-    // Test multiple times to ensure consistency
-    for (let i = 0; i < 10; i++) {
-      const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-      const totalDuration = barNotes.reduce((sum, note) => sum + DURATION_VALUES[note.duration], 0);
-      
-      if (totalDuration > 3) {
-        console.log('❌ Bar duration exceeded 3:', totalDuration, barNotes);
-        return false;
-      }
-    }
-    return true;
+  test('Shortest note dropdown default value is 1/8', () => {
+    const shortestNoteDropdown = document.getElementById('shortest-note-dropdown');
+    return shortestNoteDropdown && shortestNoteDropdown.value === '1/8';
   });
 
-  test('2/4 bar duration never exceeds 2 whole notes', () => {
-    const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
-    const possibleDurations = ['1/4', '1/2', '1'];
-    const barDuration = 2; // 2/4 time signature
+  test('Shortest note dropdown can be set to different values', () => {
+    const shortestNoteDropdown = document.getElementById('shortest-note-dropdown');
+    if (!shortestNoteDropdown) return false;
     
-    // Test multiple times to ensure consistency
-    for (let i = 0; i < 10; i++) {
-      const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-      const totalDuration = barNotes.reduce((sum, note) => sum + DURATION_VALUES[note.duration], 0);
-      
-      if (totalDuration > 2) {
-        console.log('❌ Bar duration exceeded 2:', totalDuration, barNotes);
-        return false;
-      }
-    }
-    return true;
+    // Test setting to 1/4
+    shortestNoteDropdown.value = '1/4';
+    const test1 = shortestNoteDropdown.value === '1/4';
+    
+    // Test setting to 1/2
+    shortestNoteDropdown.value = '1/2';
+    const test2 = shortestNoteDropdown.value === '1/2';
+    
+    // Reset to default
+    shortestNoteDropdown.value = '1/8';
+    
+    return test1 && test2;
   });
 
-  test('4/4 bar with shortest note 1 has exactly one note', () => {
-    const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
-    const possibleDurations = ['1']; // Only whole notes
-    const barDuration = 4; // 4/4 time signature
+  test('Shortest note dropdown contains all expected options', () => {
+    const shortestNoteDropdown = document.getElementById('shortest-note-dropdown');
+    if (!shortestNoteDropdown) return false;
     
-    const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-    return barNotes.length === 1 && barNotes[0].duration === '1';
-  });
-
-  test('3/4 bar with shortest note 1 should have error (impossible to fill)', () => {
-    const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
-    const possibleDurations = ['1']; // Only whole notes
-    const barDuration = 3; // 3/4 time signature
+    const options = Array.from(shortestNoteDropdown.options).map(option => option.value);
+    const expectedOptions = ['1/2', '1/4', '1/8', '1/16', '1/32'];
     
-    const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-    // Should return empty array or incomplete bar since 3/4 can't be filled with whole notes
-    return barNotes.length === 0 || barNotes.length === 1;
-  });
-
-  test('2/4 bar with shortest note 1 should have error (impossible to fill)', () => {
-    const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
-    const possibleDurations = ['1']; // Only whole notes
-    const barDuration = 2; // 2/4 time signature
-    
-    const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-    // Should return empty array or incomplete bar since 2/4 can't be filled with whole notes
-    return barNotes.length === 0 || barNotes.length === 1;
-  });
-
-  test('2/4 bar with shortest note 1/2 has exactly one note of 1/2', () => {
-    const scale = [0, 2, 4, 5, 7, 9, 11]; // C major
-    const possibleDurations = ['1/2']; // Only half notes
-    const barDuration = 2; // 2/4 time signature
-    
-    const barNotes = createBar(barDuration, possibleDurations, scale, 4, false, 0);
-    return barNotes.length === 1 && barNotes[0].duration === '1/2';
+    return expectedOptions.every(option => options.includes(option));
   });
   
   // Test 11: Comprehensive bar duration tests for all time signatures

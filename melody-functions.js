@@ -230,6 +230,9 @@ function drawMelody(melody, timeSignature, numVoices) {
     return;
   }
   
+  console.log('🎵 Drawing melody:', { melody, timeSignature, numVoices });
+  console.log('📊 Number of bars:', melody.bars.length);
+  
   const display = document.getElementById('melody-display');
   display.innerHTML = '';
   
@@ -249,49 +252,66 @@ function drawMelody(melody, timeSignature, numVoices) {
     
     // Parse time signature
     const [beatsPerBar, beatValue] = timeSignature.split('/').map(Number);
-    
-    // Flatten bars to notes
-    const allNotes = flattenBarsToNotes(melody.bars);
+    console.log('📊 Time signature parsed:', { beatsPerBar, beatValue });
     
     // Create staves and add notes
     let currentX = 10;
     let currentY = 10;
     const staveWidth = 150;
     const staveHeight = 100;
-    let notesPerStave = 8;
     let staveIndex = 0;
     
-    while (allNotes.length > 0) {
+    // Process each bar separately
+    for (let barIndex = 0; barIndex < melody.bars.length; barIndex++) {
+      const bar = melody.bars[barIndex];
+      console.log(`🎼 Processing bar ${barIndex + 1}:`, bar);
+      
       // Create stave
       const stave = new Vex.Flow.Stave(currentX, currentY, staveWidth);
       stave.addClef('treble').addTimeSignature(timeSignature);
       stave.setContext(context).draw();
       
-      // Take notes for this stave
-      const staveNotes = allNotes.splice(0, notesPerStave);
-      
-      // Create notes
-      const notes = staveNotes.map(note => {
-        const noteKey = note.pitch.replace('#', '/');
+      // Create notes for this bar
+      const notes = bar.map(note => {
+        // Convert note format from "C5" to "c/5" for VexFlow
+        let noteKey = note.pitch;
+        if (noteKey.includes('#')) {
+          // Handle sharps: "C#5" -> "c#/5"
+          const match = noteKey.match(/^([A-G]#?)(\d+)$/);
+          if (match) {
+            const noteName = match[1].toLowerCase();
+            const octave = match[2];
+            noteKey = `${noteName}/${octave}`;
+          }
+        } else {
+          // Handle regular notes: "C5" -> "c/5"
+          const match = noteKey.match(/^([A-G])(\d+)$/);
+          if (match) {
+            const noteName = match[1].toLowerCase();
+            const octave = match[2];
+            noteKey = `${noteName}/${octave}`;
+          }
+        }
+        
+        const vexFlowDuration = DURATION_TO_VEXFLOW[note.duration] || 'q'; // Default to quarter note if mapping not found
+        console.log(`🎵 Creating note: ${note.pitch} -> ${noteKey}, duration: ${note.duration} -> ${vexFlowDuration}`);
+        
         return new Vex.Flow.StaveNote({
           clef: 'treble',
           keys: [noteKey],
-          duration: note.duration
+          duration: vexFlowDuration
         });
       });
       
-      // Create voice and add notes
+      console.log(`🎵 Created ${notes.length} notes for bar ${barIndex + 1}`);
+      
+      // Create voice and add notes for this bar
       const voice = new Vex.Flow.Voice({ time: { num_beats: beatsPerBar, beat_value: beatValue } });
       voice.addTickables(notes);
       
-      // Format and draw
+      // Format and draw - this sets up the tick context
       new Vex.Flow.Formatter().joinVoices([voice]).format([voice], staveWidth - 20);
       voice.draw(context, stave);
-      
-      // Add bar line
-      const barNote = new Vex.Flow.BarNote();
-      barNote.setContext(context);
-      barNote.draw();
       
       // Move to next stave
       currentX += staveWidth + 10;
@@ -303,8 +323,11 @@ function drawMelody(melody, timeSignature, numVoices) {
       staveIndex++;
     }
     
+    console.log('✅ Melody drawing completed successfully');
+    
   } catch (error) {
     console.error('❌ Error drawing melody:', error);
+    console.error('❌ Error stack:', error.stack);
     display.innerHTML = `<p>Error drawing melody: ${error.message}</p>`;
   }
 }
@@ -322,8 +345,9 @@ function generateMelodyFromParams(bars, voices, instrument, shortestNote, timeSi
   }
   
   // Determine possible note durations based on shortest note
-  const shortestIndex = DURATION_STRINGS.indexOf(shortestNote);
-  const possibleDurations = DURATION_STRINGS.slice(shortestIndex);
+  const durationStrings = Object.keys(DURATION_VALUES);
+  const shortestIndex = durationStrings.indexOf(shortestNote);
+  const possibleDurations = durationStrings.slice(shortestIndex);
   
   // Generate bars
   const melodyBars = [];
