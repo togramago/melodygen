@@ -4,6 +4,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/vexflow/releases/vexflow-min.js"></script>
     <script src="https://unpkg.com/tone"></script>
+    <script src="melody-functions.js"></script>
+    <script src="melody-tests.js"></script>
     <title>Melody Generator</title>
     <style>
       :root {
@@ -378,6 +380,44 @@
           </select>
         </div>
 
+        <div class="control-group">
+          <label for="time-signature-dropdown">Time Signature:</label>
+          <select id="time-signature-dropdown">
+            <option value="4/4">4/4</option>
+            <option value="3/4">3/4</option>
+            <option value="2/4">2/4</option>
+            <option value="6/8">6/8</option>
+            <option value="3/8">3/8</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="root-note-dropdown">Root Note:</label>
+          <select id="root-note-dropdown">
+            <option value="C">C</option>
+            <option value="C#">C#</option>
+            <option value="D">D</option>
+            <option value="D#">D#</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="F#">F#</option>
+            <option value="G">G</option>
+            <option value="G#">G#</option>
+            <option value="A">A</option>
+            <option value="A#">A#</option>
+            <option value="B">B</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="scale-type-dropdown">Scale Type:</label>
+          <select id="scale-type-dropdown">
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+            <option value="pentatonic">Pentatonic</option>
+          </select>
+        </div>
+
         <div
           class="control-group toggle-switch"
           style="
@@ -450,119 +490,106 @@
     </div>
 
     <script>
-      // Initialize Tone.js
+      // Initialize Tone.js only after user interaction
+      let audioContextStarted = false;
+
+      function startAudioContext() {
+        if (!audioContextStarted) {
+          Tone.Transport.start();
+          audioContextStarted = true;
+          console.log('🎵 AudioContext started successfully');
+        }
+      }
+
+      // Add click event to the generate button to start audio context
       document.addEventListener("DOMContentLoaded", function () {
-        Tone.Transport.start();
-      });
-
-      function generateNoteSequence(
-        numBars,
-        timeSignature,
-        scale,
-        startOctave,
-        shortestNote,
-        isBassline = false,
-      ) {
-        const [beatsPerBar, beatUnit] = timeSignature.split("/").map(Number);
-        const barDuration = (4 / beatUnit) * beatsPerBar; // In whole notes
-        const notes = [];
-        let currentTime = 0;
-
-        const possibleDurations = Object.keys(DURATION_VALUES).filter(
-          (d) => DURATION_VALUES[d] <= DURATION_VALUES[shortestNote],
-        );
-
-        for (let i = 0; i < numBars; i++) {
-          let currentBarDuration = 0;
-          while (currentBarDuration < barDuration) {
-            let durationStr =
-              possibleDurations[
-                Math.floor(Math.random() * possibleDurations.length)
-              ];
-            let durationVal = DURATION_VALUES[durationStr];
-
-            if (currentBarDuration + durationVal > barDuration) {
-              // Find a duration that fits perfectly
-              const remainingDuration = barDuration - currentBarDuration;
-              const fittingDuration = Object.entries(DURATION_VALUES).find(
-                ([, val]) => Math.abs(val - remainingDuration) < 0.001,
-              );
-              if (fittingDuration) {
-                durationStr = fittingDuration[0];
-                durationVal = fittingDuration[1];
-              } else {
-                // Should not happen often with small subdivisions
-                break;
-              }
-            }
-
-            const noteIndex = scale[Math.floor(Math.random() * scale.length)];
-            const octave =
-              startOctave + (isBassline ? 0 : Math.floor(Math.random() * 2));
-            const pitch = NOTES[noteIndex] + octave;
-
-            notes.push({ time: currentTime, pitch, duration: durationStr });
-            currentBarDuration += durationVal;
-            currentTime += durationVal;
-          }
-        }
-        return notes;
-      }
-
-      function drawMelody(melody, timeSignature, numVoices) {
-        const displayDiv = document.getElementById("melody-display");
-        displayDiv.innerHTML = "";
-        const renderer = new Vex.Flow.Renderer(
-          displayDiv,
-          Vex.Flow.Renderer.Backends.SVG,
-        );
-        renderer.resize(800, numVoices === 2 ? 250 : 150);
-        const context = renderer.getContext();
-
-        const stave1 = new Vex.Flow.Stave(10, 20, 780)
-          .addClef("treble")
-          .addTimeSignature(timeSignature);
-        stave1.setContext(context).draw();
-        const vexNotes1 = melody.voice1.map((note) => {
-          const pitch = note.pitch.slice(0, -1);
-          const octave = note.pitch.slice(-1);
-          const key = `${pitch}/${octave}`;
-          const staveNote = new Vex.Flow.StaveNote({
-            keys: [key],
-            duration: note.duration.replace("n", ""),
+        const generateBtn = document.getElementById('generate-melody-btn');
+        if (generateBtn) {
+          generateBtn.addEventListener('click', function() {
+            startAudioContext();
+            console.log('🎵 Generate button clicked - AudioContext should be ready');
+            
+            // Generate melody using UI controls
+            generateMelody();
           });
-          if (pitch.includes("#")) {
-            staveNote.addModifier(new Vex.Flow.Accidental("#"));
-          }
-          return staveNote;
+        }
+
+        // Also add click event to preview icon
+        const previewIcon = document.querySelector('.preview-icon');
+        if (previewIcon) {
+          previewIcon.addEventListener('click', function() {
+            startAudioContext();
+            console.log('👁️ Preview icon clicked - AudioContext should be ready');
+          });
+        }
+
+        // Add slider event listeners to update display values
+        const barsSlider = document.getElementById('bars-slider');
+        const barsValue = document.getElementById('bars-value');
+        if (barsSlider && barsValue) {
+          // Initialize the display value
+          barsValue.textContent = barsSlider.value;
+          
+          barsSlider.addEventListener('input', function() {
+            barsValue.textContent = this.value;
+          });
+        }
+
+        const tempoSlider = document.getElementById('tempo-slider');
+        const tempoValue = document.getElementById('tempo-value');
+        if (tempoSlider && tempoValue) {
+          // Initialize the display value
+          tempoValue.textContent = tempoSlider.value;
+          
+          tempoSlider.addEventListener('input', function() {
+            tempoValue.textContent = this.value;
+          });
+        }
+
+        // Add playback speed button event listeners
+        const playbackButtons = document.querySelectorAll('.playback-speed button[data-speed]');
+        playbackButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            playbackButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            const speed = parseFloat(this.getAttribute('data-speed'));
+            console.log(`🎵 Playback speed changed to: ${speed}x`);
+            
+            // Change the actual playback speed in Tone.js
+            if (audioContextStarted) {
+              Tone.Transport.rate = speed;
+              console.log(`✅ Transport rate set to: ${speed}`);
+            } else {
+              console.log('⚠️ AudioContext not started yet. Speed will be applied when audio starts.');
+            }
+          });
         });
-        if (vexNotes1.length > 0) {
-          Vex.Flow.Formatter.FormatAndDraw(context, stave1, vexNotes1);
-        }
 
-        if (numVoices === 2 && melody.voice2.length > 0) {
-          const stave2 = new Vex.Flow.Stave(10, 130, 780)
-            .addClef("bass")
-            .addTimeSignature(timeSignature);
-          stave2.setContext(context).draw();
-          const vexNotes2 = melody.voice2.map((note) => {
-            const pitch = note.pitch.slice(0, -1);
-            const octave = note.pitch.slice(-1);
-            const key = `${pitch}/${octave}`;
-            const staveNote = new Vex.Flow.StaveNote({
-              keys: [key],
-              duration: note.duration.replace("n", ""),
-            });
-            if (pitch.includes("#")) {
-              staveNote.addModifier(new Vex.Flow.Accidental("#"));
-            }
-            return staveNote;
-          });
-          if (vexNotes2.length > 0) {
-            Vex.Flow.Formatter.FormatAndDraw(context, stave2, vexNotes2);
-          }
-        }
-      }
+        // Add test button
+        const testBtn = document.createElement('button');
+        testBtn.textContent = '🧪 Run Tests';
+        testBtn.style.cssText = `
+          background-color: var(--secondary-color);
+          color: var(--button-text);
+          border: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-top: 10px;
+          font-size: 1em;
+        `;
+        testBtn.addEventListener('click', runTests);
+        document.querySelector('.container').appendChild(testBtn);
+
+        // Run tests automatically when page loads
+        setTimeout(() => {
+          console.log('🚀 Auto-running tests...');
+          runTests();
+        }, 1000);
+      });
     </script>
   </body>
 </html>
