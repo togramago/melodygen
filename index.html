@@ -1,462 +1,362 @@
-<!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 Melody Generator</title>
+    <title>Melody Generator</title>
     <style>
-        * {
+        :root {
+            / Light Mode Colors /
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --border-color: #ddd;
+            --card-bg: #fff;
+            --input-bg: #fff;
+            --input-border: #ccc;
+            --button-bg: var(--primary-color);
+            --button-text: #fff;
+            --accent-color: #28a745; / For generate button /
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                / Dark Mode Colors /
+                --bg-color: #2c3e50;
+                --text-color: #ecf0f1;
+                --primary-color: #3498db;
+                --secondary-color: #95a5a6;
+                --border-color: #444;
+                --card-bg: #34495e;
+                --input-bg: #2c3e50;
+                --input-border: #555;
+                --button-bg: var(--primary-color);
+                --button-text: #fff;
+                --accent-color: #2ecc71; / For generate button /
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
             box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-```
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        color: #2d3748;
-        transition: all 0.3s ease;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .header {
-        text-align: center;
-        margin-bottom: 30px;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    .control-panel {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 30px;
-        margin-bottom: 30px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .controls-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-
-    .control-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .control-group label {
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #4a5568;
-        font-size: 0.9rem;
-    }
-
-    .control-group input,
-    .control-group select {
-        padding: 12px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: white;
-    }
-
-    .control-group input:focus,
-    .control-group select:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .slider-container {
-        position: relative;
-    }
-
-    .slider {
-        width: 100%;
-        height: 6px;
-        border-radius: 3px;
-        background: #e2e8f0;
-        outline: none;
-        -webkit-appearance: none;
-    }
-
-    .slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #667eea;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    .slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #667eea;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    .slider-value {
-        position: absolute;
-        top: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #667eea;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    .toggle-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .toggle {
-        position: relative;
-        width: 50px;
-        height: 25px;
-        background: #e2e8f0;
-        border-radius: 25px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .toggle.active {
-        background: #667eea;
-    }
-
-    .toggle-knob {
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 21px;
-        height: 21px;
-        background: white;
-        border-radius: 50%;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .toggle.active .toggle-knob {
-        transform: translateX(25px);
-    }
-
-    .preview-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        background: #f7fafc;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 1.5rem;
-    }
-
-    .preview-button:hover {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .generate-button {
-        width: 100%;
-        padding: 18px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 15px;
-        font-size: 1.2rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        margin-top: 20px;
-    }
-
-    .generate-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-    }
-
-    .melody-display {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 30px;
-        margin-bottom: 30px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-        min-height: 300px;
-    }
-
-    .staff-container {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    .staff {
-        position: relative;
-        height: 120px;
-        margin: 20px 0;
-    }
-
-    .staff-line {
-        position: absolute;
-        width: 100%;
-        height: 1px;
-        background: #2d3748;
-        left: 0;
-    }
-
-    .staff-line:nth-child(1) { top: 20px; }
-    .staff-line:nth-child(2) { top: 40px; }
-    .staff-line:nth-child(3) { top: 60px; }
-    .staff-line:nth-child(4) { top: 80px; }
-    .staff-line:nth-child(5) { top: 100px; }
-
-    .clef {
-        position: absolute;
-        left: 10px;
-        top: 30px;
-        font-size: 3rem;
-        color: #2d3748;
-        font-weight: bold;
-    }
-
-    .interactive-controls {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .reveal-section {
-        margin-bottom: 30px;
-    }
-
-    .reveal-section h3 {
-        margin-bottom: 15px;
-        color: #4a5568;
-        font-size: 1.1rem;
-    }
-
-    .reveal-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .reveal-button {
-        padding: 10px 16px;
-        background: #f7fafc;
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-    }
-
-    .reveal-button.revealed {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .reveal-button:hover {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .playback-section h3 {
-        margin-bottom: 15px;
-        color: #4a5568;
-        font-size: 1.1rem;
-    }
-
-    .speed-buttons {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .speed-button {
-        padding: 8px 16px;
-        background: #f7fafc;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-    }
-
-    .speed-button.active {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .replay-button {
-        padding: 12px 24px;
-        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-    }
-
-    .replay-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-    }
-
-    .note {
-        position: absolute;
-        font-family: 'Times New Roman', serif;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .note:hover {
-        transform: scale(1.1);
-        color: #667eea;
-    }
-
-    .note-head {
-        font-size: 1.8rem;
-    }
-
-    .note-stem {
-        position: absolute;
-        width: 1px;
-        background: #2d3748;
-    }
-
-    .note-beam {
-        position: absolute;
-        height: 3px;
-        background: #2d3748;
-    }
-
-    .rest {
-        position: absolute;
-        font-size: 1.5rem;
-        color: #4a5568;
-    }
-
-    .sharp, .flat {
-        position: absolute;
-        font-size: 1rem;
-        color: #2d3748;
-        left: -8px;
-    }
-
-    .time-signature {
-        position: absolute;
-        left: 50px;
-        top: 45px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #2d3748;
-    }
-
-    .key-signature {
-        position: absolute;
-        left: 70px;
-        top: 30px;
-        font-size: 1.2rem;
-        color: #2d3748;
-    }
-
-    @media (max-width: 768px) {
-        .controls-grid {
-            grid-template-columns: 1fr;
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            border: 1px solid var(--border-color);
         }
-        
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        #control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--text-color);
+            font-size: 0.95em;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: var(--border-color);
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: 2px solid var(--card-bg);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: 2px solid var(--card-bg);
+        }
+
+        select,
+        input[type="checkbox"] {
+            padding: 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        select:focus,
+        input[type="checkbox"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--secondary-color);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+
+        .preview-icon {
+            font-size: 1.8em;
+            cursor: pointer;
+            color: var(--primary-color);
+            align-self: flex-end;
+            margin-left: auto;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .preview-icon:hover {
+            background-color: rgba(var(--primary-color), 0.1);
+        }
+
+        #generate-melody-btn {
+            background-color: var(--accent-color);
+            color: var(--button-text);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            width: fit-content;
+            align-self: center;
+            margin-top: 10px;
+        }
+
+        #generate-melody-btn:hover {
+            background-color: #218838; / Darker green for hover /
+            transform: translateY(-2px);
+        }
+
+        #generate-melody-btn:active {
+            transform: translateY(0);
+        }
+
+        #melody-display {
+            min-height: 200px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-style: italic;
+            color: var(--secondary-color);
+            padding: 20px;
+            text-align: center;
+            background-color: var(--input-bg);
+        }
+
+        #interactive-reveal {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+        }
+
         .reveal-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             justify-content: center;
         }
-        
-        .speed-buttons {
-            justify-content: center;
-        }
-    }
-</style>
-```
 
+        .reveal-buttons button {
+            background-color: var(--primary-color);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .reveal-buttons button:hover {
+            background-color: #0056b3; / Darker blue /
+        }
+
+        .playback-speed {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .playback-speed button {
+            background-color: var(--secondary-color);
+            color: var(--button-text);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .playback-speed button:hover {
+            background-color: #5a6268; / Darker gray /
+        }
+
+        .playback-speed button.active {
+            background-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        / Responsive adjustments /
+        @media (max-width: 768px) {
+            #control-panel {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            #generate-melody-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header class="header">
+        <header>
             <h1>🎵 Melody Generator</h1>
-            <p>Create beautiful melodies with customizable parameters</p>
         </header>
 
-```
-    <!-- Control Panel -->
-    <section class="control-panel">
-        <div class="controls-grid">
-            <!-- Bars Slider -->
+        <section id="control-panel">
+            <h2 class="section-title">🔧 Control Panel</h2>
+
             <div class="control-group">
-                <label for="bars">Number of Bars</label>
-                <div class="slider-container">
-                    <input type="range" id="bars" class="slider" min="1" max="8" value="4">
-                    <div class="slider-value" id="barsValue">4</div>
-                </div>
+                <label for="bars-slider">Bars: <span id="bars-value">4</span></label>
+                <input type="range" id="bars-slider" min="1" max="8" value="4">
             </div>
 
-            <!-- Voices Selector -->
             <div class="control-group">
-                <label for="voices">Voices</label>
-                <select id="voices">
+                <label for="voices-selector">Voices:</label>
+                <select id="voices-selector">
                     <option value="1">1 Voice</option>
                     <option value="2">2 Voices</option>
                 </select>
             </div>
 
-            <!-- Instrument Dropdown -->
             <div class="control-group">
-                <label for="instrument">Instrument</label>
-                <select id="instrument">
+                <label for="instrument-dropdown">Instrument:</label>
+                <select id="instrument-dropdown">
                     <option value="piano">Piano</option>
                     <option value="strings">Strings</option>
                     <option value="synth">Synth</option>
@@ -465,297 +365,90 @@
                 </select>
             </div>
 
-            <!-- Key Selection -->
             <div class="control-group">
-                <label for="key">Tempo</label>
-                <div class="slider-container">
-                    <input type="range" id="tempo" class="slider" min="60" max="180" value="90">
-                    <div class="slider-value" id="tempoValue">90</div>
-                </div>
-            </div>
-
-            <!-- Shortest Note -->
-            <div class="control-group">
-                <label for="shortestNote">Shortest Note</label>
-                <select id="shortestNote">
-                    <option value="1/8">1/8 Note</option>
-                    <option value="1/16">1/16 Note</option>
-                    <option value="1/32">1/32 Note</option>
+                <label for="shortest-note-dropdown">Shortest Note:</label>
+                <select id="shortest-note-dropdown">
+                    <option value="1/8">1/8</option>
+                    <option value="1/16">1/16</option>
+                    <option value="1/32">1/32</option>
                 </select>
             </div>
 
-            <!-- Syncopated Rhythm Toggle -->
-            <div class="control-group">
-                <label>Syncopated Rhythm</label>
-                <div class="toggle-container">
-                    <div class="toggle" id="syncopatedToggle">
-                        <div class="toggle-knob"></div>
-                    </div>
-                    <span id="syncopatedText">Off</span>
-                </div>
+            <div class="control-group toggle-switch">
+                <label for="syncopated-rhythm-toggle">Syncopated Rhythm:</label>
+                <label class="switch">
+                    <input type="checkbox" id="syncopated-rhythm-toggle">
+                    <span class="slider"></span>
+                </label>
             </div>
 
-        </div>
-
-        <button class="generate-button" id="generateButton">
-            🎼 Generate Melody
-        </button>
-    </section>
-
-    <!-- Melody Display -->
-    <section class="melody-display">
-        <div id="staffContainer">
-            <div class="placeholder-text">
-                Click "Generate Melody" to create your musical composition
+            <div class="control-group" style="grid-column: span 1; display: flex; justify-content: flex-end; align-items: center;">
+                <span class="preview-icon" title="Preview Melody">👁️</span>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Interactive Controls -->
-    <section class="interactive-controls">
-        <div class="reveal-section">
-            <h3>🧩 Reveal Bars</h3>
-            <div class="reveal-buttons" id="revealButtons">
-                <!-- Buttons will be generated dynamically -->
+        <button id="generate-melody-btn">Generate Melody</button>
+
+        <section id="melody-display">
+            <h2 class="section-title">🎼 Melody Display</h2>
+            <p>Melody will be displayed here after generation.</p>
+            <!-- Staff lines will be rendered here dynamically -->
+        </section>
+
+        <section id="interactive-reveal">
+            <h2 class="section-title">🧩 Interactive Reveal Area</h2>
+            <div class="reveal-buttons">
+                <!-- Reveal buttons for bars will be generated here -->
+                <button>Bar 1: [Reveal]</button>
+                <button>Bar 2: [Reveal]</button>
+                <button>Bar 3: [Reveal]</button>
+                <button>Bar 4: [Reveal]</button>
             </div>
-        </div>
-
-        <div class="playback-section">
-            <h3>🎵 Playback Controls</h3>
-            <div class="speed-buttons">
-                <div class="speed-button" data-speed="0.25">0.25x</div>
-                <div class="speed-button" data-speed="0.5">0.5x</div>
-                <div class="speed-button" data-speed="0.75">0.75x</div>
-                <div class="speed-button active" data-speed="1">1x</div>
+            <div class="playback-speed">
+                <label>Playback Speed:</label>
+                <button data-speed="0.25">0.25x</button>
+                <button data-speed="0.5">0.5x</button>
+                <button data-speed="0.75">0.75x</button>
+                <button data-speed="1" class="active">1x</button>
             </div>
-            <button class="replay-button" id="replayButton">
-                ▶️ Replay Melody
-            </button>
-        </div>
-    </section>
-</div>
+        </section>
+    </div>
 
-<script>
-    // Global state
-    let generatedMelody = null;
-    let currentSpeed = 1;
-    let revealedBars = new Set();
+    <script>
+        // JavaScript for dynamic UI updates (e.g., slider value, reveal buttons)
+        const barsSlider = document.getElementById('bars-slider');
+        const barsValueSpan = document.getElementById('bars-value');
+        const revealButtonsContainer = document.querySelector('.reveal-buttons');
 
-    // Initialize the app
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeControls();
-        updateRevealButtons();
-    });
-
-    function initializeControls() {
-        // Bars slider
-        const barsSlider = document.getElementById('bars');
-        const barsValue = document.getElementById('barsValue');
-        
-        barsSlider.addEventListener('input', function() {
-            barsValue.textContent = this.value;
-            updateRevealButtons();
+        barsSlider.addEventListener('input', () => {
+            barsValueSpan.textContent = barsSlider.value;
+            updateRevealButtons(parseInt(barsSlider.value));
         });
 
-        // Syncopated toggle
-        const syncopatedToggle = document.getElementById('syncopatedToggle');
-        const syncopatedText = document.getElementById('syncopatedText');
-        
-        syncopatedToggle.addEventListener('click', function() {
-            this.classList.toggle('active');
-            syncopatedText.textContent = this.classList.contains('active') ? 'On' : 'Off';
-        });
+        function updateRevealButtons(numBars) {
+            revealButtonsContainer.innerHTML = '';
+            for (let i = 1; i <= numBars; i++) {
+                const button = document.createElement('button');
+                button.textContent = Bar ${i}: [Reveal];
+                revealButtonsContainer.appendChild(button);
+            }
+        }
 
-        // Generate button
-        document.getElementById('generateButton').addEventListener('click', generateMelody);
+        // Initialize reveal buttons on page load
+        updateRevealButtons(parseInt(barsSlider.value));
 
-        // Preview button
-        document.getElementById('previewButton').addEventListener('click', previewMelody);
+        // Set 1x playback speed as active by default
+        document.querySelector('.playback-speed button[data-speed="1"]').classList.add('active');
 
-        // Speed buttons
-        document.querySelectorAll('.speed-button').forEach(button => {
-            button.addEventListener('click', function() {
-                document.querySelectorAll('.speed-button').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentSpeed = parseFloat(this.dataset.speed);
+        // Add event listener for playback speed buttons (for visual active state)
+        const playbackSpeedButtons = document.querySelectorAll('.playback-speed button');
+        playbackSpeedButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                playbackSpeedButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
             });
         });
 
-        // Replay button
-        document.getElementById('replayButton').addEventListener('click', replayMelody);
-    }
-
-    function updateRevealButtons() {
-        const numBars = parseInt(document.getElementById('bars').value);
-        const revealButtons = document.getElementById('revealButtons');
-        
-        revealButtons.innerHTML = '';
-        revealedBars.clear();
-        
-        for (let i = 1; i <= numBars; i++) {
-            const button = document.createElement('div');
-            button.className = 'reveal-button';
-            button.textContent = `Bar ${i}`;
-            button.dataset.bar = i;
-            
-            button.addEventListener('click', function() {
-                this.classList.toggle('revealed');
-                const barNum = parseInt(this.dataset.bar);
-                
-                if (this.classList.contains('revealed')) {
-                    revealedBars.add(barNum);
-                } else {
-                    revealedBars.delete(barNum);
-                }
-                
-                updateMelodyDisplay();
-            });
-            
-            revealButtons.appendChild(button);
-        }
-    }
-
-    function generateMelody() {
-        const bars = parseInt(document.getElementById('bars').value);
-        const voices = parseInt(document.getElementById('voices').value);
-        const instrument = document.getElementById('instrument').value;
-        const shortestNote = document.getElementById('shortestNote').value;
-        const syncopated = document.getElementById('syncopatedToggle').classList.contains('active');
-
-        // Generate the melody data
-        generatedMelody = createMelodyData(bars, voices, instrument, shortestNote, syncopated);
-        
-        // Reset revealed bars
-        revealedBars.clear();
-        document.querySelectorAll('.reveal-button').forEach(button => {
-            button.classList.remove('revealed');
-        });
-        
-        // Update display
-        updateMelodyDisplay();
-    }
-
-    function createMelodyData(bars, voices, instrument, shortestNote, syncopated) {
-        // This is where the melody generation logic will go
-        // For now, creating a basic structure
-        return {
-            bars: bars,
-            voices: voices,
-            instrument: instrument,
-            shortestNote: shortestNote,
-            syncopated: syncopated,
-            notes: generateNotes(bars, voices, shortestNote, syncopated)
-        };
-    }
-
-    function generateNotes(bars, voices, shortestNote, syncopated) {
-        // Placeholder note generation - this will be expanded
-        const notes = [];
-        
-        for (let voice = 0; voice < voices; voice++) {
-            const voiceNotes = [];
-            for (let bar = 0; bar < bars; bar++) {
-                const barNotes = [];
-                // Generate 4-8 notes per bar depending on shortest note value
-                const notesPerBar = shortestNote === '1/32' ? 8 : shortestNote === '1/16' ? 6 : 4;
-                
-                for (let i = 0; i < notesPerBar; i++) {
-                    barNotes.push({
-                        pitch: Math.floor(Math.random() * 12) + (voice === 0 ? 60 : 48), // MIDI note numbers
-                        duration: shortestNote,
-                        position: i * (1 / notesPerBar)
-                    });
-                }
-                voiceNotes.push(barNotes);
-            }
-            notes.push(voiceNotes);
-        }
-        
-        return notes;
-    }
-
-    function updateMelodyDisplay() {
-        const staffContainer = document.getElementById('staffContainer');
-        
-        if (!generatedMelody) {
-            staffContainer.innerHTML = '<div class="placeholder-text">Click "Generate Melody" to create your musical composition</div>';
-            return;
-        }
-
-        const voices = generatedMelody.voices;
-        
-        staffContainer.innerHTML = '';
-        
-        // Create staff(s)
-        for (let voice = 0; voice < voices; voice++) {
-            const staffDiv = document.createElement('div');
-            staffDiv.className = 'staff-container';
-            
-            const staff = document.createElement('div');
-            staff.className = 'staff';
-            
-            // Add staff lines
-            for (let i = 0; i < 5; i++) {
-                const line = document.createElement('div');
-                line.className = 'staff-line';
-                staff.appendChild(line);
-            }
-            
-            // Add clef
-            const clef = document.createElement('div');
-            clef.className = 'clef';
-            clef.textContent = voice === 0 ? '𝄞' : '𝄢'; // Treble or Bass clef
-            staff.appendChild(clef);
-            
-            // Add notes for revealed bars
-            addNotesToStaff(staff, voice, generatedMelody.notes[voice]);
-            
-            staffDiv.appendChild(staff);
-            staffContainer.appendChild(staffDiv);
-        }
-    }
-
-    function addNotesToStaff(staff, voice, voiceNotes) {
-        voiceNotes.forEach((barNotes, barIndex) => {
-            if (revealedBars.has(barIndex + 1)) {
-                barNotes.forEach((note, noteIndex) => {
-                    const noteElement = document.createElement('div');
-                    noteElement.style.position = 'absolute';
-                    noteElement.style.left = (80 + (barIndex * 200) + (noteIndex * 30)) + 'px';
-                    noteElement.style.top = getPitchPosition(note.pitch, voice) + 'px';
-                    noteElement.style.fontSize = '1.5rem';
-                    noteElement.style.color = '#2d3748';
-                    noteElement.textContent = '♪';
-                    staff.appendChild(noteElement);
-                });
-            }
-        });
-    }
-
-    function getPitchPosition(midiNote, voice) {
-        // Convert MIDI note to staff position
-        // This is a simplified version - real implementation would be more complex
-        const basePosition = voice === 0 ? 60 : 80; // Treble vs Bass clef base
-        const pitchOffset = (72 - midiNote) * 2; // Approximate staff line spacing
-        return Math.max(10, Math.min(110, basePosition + pitchOffset));
-    }
-
-    function previewMelody() {
-        // Placeholder for preview functionality
-        alert('Preview functionality - would play a short snippet of the melody');
-    }
-
-    function replayMelody() {
-        if (!generatedMelody) {
-            alert('Please generate a melody first!');
-            return;
-        }
-        
-        // Placeholder for replay functionality
-        alert(`Replaying melody at ${currentSpeed}x speed`);
-    }
-</script>
-```
-
+    </script>
 </body>
 </html>
